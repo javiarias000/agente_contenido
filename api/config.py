@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     dashboard_url: str = "http://localhost:3000"
 
     # OpenAI model names
-    text_model: str = "gpt-4o-mini"
+    text_model: str = "gpt-4-mini"
     image_model: str = "dall-e-3"
     whisper_model: str = "whisper-1"
 

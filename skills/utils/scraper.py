@@ -14,7 +14,17 @@ async def fetch_html(url: str, timeout: float = 30.0) -> tuple[str, str]:
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/124.0.0.0 Safari/537.36"
-        )
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Referer": "https://www.google.com/",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
     }
     async with httpx.AsyncClient(follow_redirects=True, timeout=timeout) as client:
         resp = await client.get(url, headers=headers)
@@ -99,10 +109,20 @@ def extract_text_samples(soup: BeautifulSoup, max_chars: int = 2000) -> str:
 
 async def fetch_css_text(urls: list[str], timeout: float = 10.0) -> str:
     parts = []
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/css,*/*;q=0.1",
+        "Referer": "https://www.google.com/",
+    }
     async with httpx.AsyncClient(timeout=timeout) as client:
         for url in urls[:5]:
             try:
-                r = await client.get(url)
+                r = await client.get(url, headers=headers)
+                r.raise_for_status()
                 parts.append(r.text[:50_000])
             except Exception:
                 pass

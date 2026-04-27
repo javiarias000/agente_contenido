@@ -60,16 +60,28 @@ class BrandAnalyzer(BaseSkill):
 
         # 1. Fetch page
         await self.emit("progress", "Descargando página...")
-        html, final_url = await fetch_html(url)
-        soup = BeautifulSoup(html, "lxml")
+        try:
+            html, final_url = await fetch_html(url)
+            soup = BeautifulSoup(html, "lxml")
+        except Exception as e:
+            await self.emit("progress", f"⚠️  No se pudo descargar la página ({type(e).__name__}). Continuando con análisis limitado...")
+            soup = None
+            final_url = url
 
         # 2. Extract assets
         await self.emit("progress", "Extrayendo assets visuales...")
-        logo_urls = extract_logo_urls(soup, final_url)
-        css_urls = extract_css_urls(soup, final_url)
-        inline_css = extract_inline_styles(soup)
-        text_samples = extract_text_samples(soup)
-        page_title = soup.title.string.strip() if soup.title else name
+        if soup:
+            logo_urls = extract_logo_urls(soup, final_url)
+            css_urls = extract_css_urls(soup, final_url)
+            inline_css = extract_inline_styles(soup)
+            text_samples = extract_text_samples(soup)
+            page_title = soup.title.string.strip() if soup.title else name
+        else:
+            logo_urls = []
+            css_urls = []
+            inline_css = ""
+            text_samples = ""
+            page_title = name
 
         # 3. Colors
         await self.emit("progress", "Extrayendo paleta de colores...")

@@ -47,33 +47,34 @@ export default function PipelineProgress({ events, status }: PipelineProgressPro
 
   if (steps.length === 0 && status === "idle") {
     return (
-      <p className="text-sm text-muted-foreground">El pipeline aún no ha iniciado.</p>
+      <p className="text-sm text-gray-500">El pipeline aún no ha iniciado.</p>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {steps.map((step, i) => (
         <div key={step.name} className="flex items-start gap-3">
-          <div className="mt-0.5">
+          <div className="mt-1 flex flex-col items-center">
             {step.status === "completed" && <CheckCircle className="h-5 w-5 text-green-500" />}
             {step.status === "running" && <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />}
             {step.status === "failed" && <XCircle className="h-5 w-5 text-red-500" />}
-            {step.status === "paused" && <PauseCircle className="h-5 w-5 text-yellow-500" />}
+            {step.status === "paused" && <PauseCircle className="h-5 w-5 text-amber-500" />}
             {step.status === "pending" && <Circle className="h-5 w-5 text-gray-300" />}
+            {i < steps.length - 1 && <div className="w-0.5 h-3 bg-gray-200 my-1" />}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pt-0.5">
             <p className={cn("text-sm font-medium", {
               "text-green-700": step.status === "completed",
               "text-blue-700": step.status === "running",
               "text-red-700": step.status === "failed",
-              "text-yellow-700": step.status === "paused",
+              "text-amber-700": step.status === "paused",
               "text-gray-400": step.status === "pending",
             })}>
               {STEP_LABELS[step.name] || step.name}
             </p>
             {step.message && (
-              <p className="text-xs text-muted-foreground truncate">{step.message}</p>
+              <p className="text-xs text-gray-500 truncate">{step.message}</p>
             )}
           </div>
         </div>
