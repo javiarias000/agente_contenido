@@ -85,18 +85,16 @@ class ImageGenerator(BaseSkill):
     ) -> str:
         prompt = _build_image_prompt(visual_description, character_anchor, style_notes, scene_index)
         async with self._semaphore:
-            is_gpt_image = "gpt-image" in settings.image_model
+            is_gpt_image = settings.image_model.startswith("gpt-image")
             kwargs: dict = {
                 "model": settings.image_model,
                 "prompt": prompt[:4000],
                 "n": 1,
             }
             if is_gpt_image:
-                # gpt-image-1: returns base64, supports 1024x1024/1536x1024/1024x1536
-                # Map vertical size to nearest supported
+                # gpt-image-2: supports 1024x1024, 1536x1024, 1024x1536
                 kwargs["size"] = "1024x1536"
                 kwargs["quality"] = "high"
-                kwargs["output_format"] = "png"
             else:
                 # dall-e-3
                 kwargs["size"] = size  # type: ignore[assignment]

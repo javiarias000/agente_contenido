@@ -1,0 +1,46 @@
+{
+  "name": "Notion",
+  "slug": "notion",
+  "url": "https://notion.so",
+  "analyzed_at": "2026-04-26T23:21:22.982666",
+  "colors": {
+    "palette": [
+      "#4c6b73",
+      "#a4a4a4",
+      "#949494",
+      "#444444",
+      "#7c7c7c",
+      "#ff0"
+    ],
+    "primary": "#4c6b73",
+    "secondary": "#a4a4a4",
+    "accent": "#949494",
+    "background": "#ffffff",
+    "text": "#111111"
+  },
+  "typography": {
+    "heading_font": "sans-serif",
+    "body_font": "monospace",
+    "all_fonts": [
+      "sans-serif",
+      "monospace",
+      "var(--font-family-sans)"
+    ]
+  },
+  "tone_of_voice": "The brand communicates in a professional yet approachable manner, emphasizing efficiency and innovation.",
+  "target_audience": "Primarily tech-savvy professionals and teams in various industries looking for productivity solutions, aged 25-45, who value collaboration and streamlined workflows.",
+  "brand_values": [
+    "Efficiency",
+    "Innovation",
+    "Collaboration",
+    "Simplicity",
+    "Trust"
+  ],
+  "style_notes": "A modern and clean visual style with a focus on minimalism, using a palette of muted colors complemented by bold accents, and featuring sleek, sans-serif typography.",
+  "content_suggestions": [
+    "Tips for maximizing productivity with Notion's features",
+    "User testimonials showcasing real-life applications of Notion in various industries",
+    "Behind-the-scenes looks at how teams use Notion to collaborate effectively"
+  ],
+  "character_anchor": "An ideal spokesperson is a young, diverse professional in their early 30s, with a friendly demeanor, dressed in smart-casual attire. They have short, well-groomed hair, wear glasses, and exude confidence and approachability, often seen interacting with a laptop or digital devices."
+}

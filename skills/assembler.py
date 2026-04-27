@@ -134,23 +134,24 @@ class Assembler(BaseSkill):
                 continue
             duration = _get_audio_duration(audio) if audio and os.path.exists(audio) else 3.0
             out_path = img.replace(".png", f"_clip_{i}.mp4")
+            vf = (
+                f"scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease,"
+                f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
+            )
             cmd = [
                 "ffmpeg", "-y", "-loop", "1", "-i", img,
                 "-t", str(duration),
-                "-vf", f"scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease,"
-                       f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
-                       f"zoompan=z='min(zoom+0.0015,1.5)':d={int(duration * OUTPUT_FPS)}:"
-                       f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-                       f"s={OUTPUT_WIDTH}x{OUTPUT_HEIGHT}",
+                "-vf", vf,
                 "-r", str(OUTPUT_FPS),
                 "-pix_fmt", "yuv420p",
-                "-c:v", "libx264",
+                "-c:v", "libx264", "-preset", "fast",
             ]
             if audio and os.path.exists(audio):
                 cmd += ["-i", audio, "-c:a", "aac", "-shortest"]
             cmd.append(out_path)
-            subprocess.run(cmd, capture_output=True, timeout=120)
-            clips.append(out_path)
+            result = subprocess.run(cmd, capture_output=True, timeout=120)
+            if result.returncode == 0 and os.path.exists(out_path):
+                clips.append(out_path)
         return clips
 
     def _concatenate_clips(self, clip_paths: list[str], output_path: str) -> None:
@@ -185,12 +186,14 @@ class Assembler(BaseSkill):
         _write_srt(words, srt_path)
 
     def _burn_subtitles(self, input_path: str, srt_path: str, output_path: str) -> None:
+        import shutil
+        if not os.path.exists(input_path):
+            return
         if not os.path.exists(srt_path) or os.path.getsize(srt_path) == 0:
-            import shutil
             shutil.copy(input_path, output_path)
             return
         abs_srt = os.path.abspath(srt_path).replace("\\", "/").replace(":", "\\:")
-        subprocess.run(
+        result = subprocess.run(
             ["ffmpeg", "-y", "-i", input_path,
              "-vf", f"subtitles='{abs_srt}':force_style='FontSize=24,Bold=1,"
                    "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,"
@@ -198,6 +201,9 @@ class Assembler(BaseSkill):
              "-c:a", "copy", output_path],
             capture_output=True, timeout=300,
         )
+        if result.returncode != 0 or not os.path.exists(output_path):
+            # Fallback: copy without subtitles
+            shutil.copy(input_path, output_path)
 
     def _mix_audio(self, video_path: str, bgm_path: str, output_path: str) -> None:
         subprocess.run(

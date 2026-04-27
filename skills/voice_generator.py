@@ -4,13 +4,15 @@ import os
 from typing import Any
 
 from elevenlabs.client import AsyncElevenLabs
+from openai import AsyncOpenAI
 
 from api.config import settings
 from api.events import EventBus
 from skills import BaseSkill, SkillResult
 
-DEFAULT_MODEL = "eleven_multilingual_v2"
-DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel — neutral, clear
+DEFAULT_ELEVEN_MODEL = "eleven_multilingual_v2"
+DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel
+OPENAI_TTS_VOICE = "nova"                   # nova | alloy | echo | fable | onyx | shimmer
 
 
 class VoiceGenerator(BaseSkill):
@@ -18,7 +20,8 @@ class VoiceGenerator(BaseSkill):
 
     def __init__(self, event_bus: EventBus, run_id: str, step_index: int = 0):
         super().__init__(event_bus, run_id, step_index)
-        self.client = AsyncElevenLabs(api_key=settings.elevenlabs_api_key)
+        self.eleven = AsyncElevenLabs(api_key=settings.elevenlabs_api_key)
+        self.openai = AsyncOpenAI(api_key=settings.openai_api_key)
 
     async def run(self, inputs: dict[str, Any], interactive: bool = False) -> SkillResult:
         script: dict = inputs["script"]
@@ -52,7 +55,6 @@ class VoiceGenerator(BaseSkill):
                 data={"audio_path": path, "scene_index": idx},
             )
 
-        # Full concatenated voiceover
         full_path = os.path.join(audio_dir, f"{self.run_id}_full_voiceover.mp3")
         if full_text.strip():
             await self._synthesize(full_text.strip(), voice_id, full_path)
@@ -71,24 +73,44 @@ class VoiceGenerator(BaseSkill):
         )
         return SkillResult(
             status="completed",
-            outputs={
-                "audio_paths": audio_paths,
-                "full_voiceover_path": full_path,
-            },
+            outputs={"audio_paths": audio_paths, "full_voiceover_path": full_path},
         )
 
     async def _synthesize(self, text: str, voice_id: str, output_path: str) -> None:
-        audio_generator = await self.client.text_to_speech.convert(
-            voice_id=voice_id,
-            text=text,
-            model_id=DEFAULT_MODEL,
-            output_format="mp3_44100_128",
-        )
+        """Try ElevenLabs first; fall back to OpenAI TTS on any error."""
+        try:
+            await self._synthesize_elevenlabs(text, voice_id, output_path)
+        except Exception as e:
+            await self.emit("log", f"ElevenLabs falló ({e}), usando OpenAI TTS...")
+            await self._synthesize_openai(text, output_path)
+
+    async def _synthesize_elevenlabs(self, text: str, voice_id: str, output_path: str) -> None:
         with open(output_path, "wb") as f:
-            async for chunk in audio_generator:
+            async for chunk in self.eleven.text_to_speech.convert(
+                voice_id=voice_id,
+                text=text,
+                model_id=DEFAULT_ELEVEN_MODEL,
+                output_format="mp3_44100_128",
+            ):
                 if chunk:
                     f.write(chunk)
 
+    async def _synthesize_openai(self, text: str, output_path: str) -> None:
+        response = await self.openai.audio.speech.create(
+            model="tts-1",
+            voice=OPENAI_TTS_VOICE,
+            input=text[:4096],
+            response_format="mp3",
+        )
+        with open(output_path, "wb") as f:
+            f.write(response.content)
+
     async def list_voices(self) -> list[dict]:
-        result = await self.client.voices.get_all()
-        return [{"id": v.voice_id, "name": v.name} for v in result.voices]
+        try:
+            result = await self.eleven.voices.get_all()
+            return [{"id": v.voice_id, "name": v.name, "provider": "elevenlabs"} for v in result.voices]
+        except Exception:
+            return [
+                {"id": v, "name": v.capitalize(), "provider": "openai"}
+                for v in ["alloy", "echo", "fable", "nova", "onyx", "shimmer"]
+            ]
