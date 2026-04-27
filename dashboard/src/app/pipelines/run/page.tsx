@@ -20,26 +20,37 @@ function RunPipelineForm() {
     character_description: "",
     competitor_name: "",
     custom_hook: "",
+    voice_id: "",
     num_ads: 10,
     topic: "",
     num_slides: 6,
     news_url: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { data: brands } = useSWR("brands", api.listBrands);
 
-  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }));
+  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    let value: any = e.target.value;
+    if (["target_duration", "num_ads", "num_slides"].includes(k)) {
+      value = parseInt(value, 10) || 0;
+    }
+    setForm(f => ({ ...f, [k]: value }));
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.brand_slug) return alert("Selecciona una marca");
+    setError("");
+    if (!form.brand_slug) {
+      setError("Selecciona una marca para continuar");
+      return;
+    }
     setLoading(true);
     try {
       const res = await api.runPipeline(form);
       router.push(`/pipelines/${res.run_id}`);
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      setError(err.message || "Error al ejecutar el pipeline");
     } finally {
       setLoading(false);
     }
@@ -53,6 +64,11 @@ function RunPipelineForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white border rounded-xl p-6 space-y-4">
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
         <div>
           <label className="text-sm font-medium block mb-1">Tipo de Pipeline</label>
           <select value={form.pipeline_type} onChange={update("pipeline_type")} className="w-full border rounded-lg px-3 py-2 text-sm">
@@ -110,6 +126,24 @@ function RunPipelineForm() {
                 <input type="text" value={form.competitor_name} onChange={update("competitor_name")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: Amazon" />
               </div>
             )}
+            <div>
+              <label className="text-sm font-medium block mb-1">Descripción del personaje (opcional)</label>
+              <input type="text" value={form.character_description} onChange={update("character_description")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: Mujer de 25 años, energética" />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Hook personalizado (opcional)</label>
+              <input type="text" value={form.custom_hook} onChange={update("custom_hook")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: ¿Sabías que...?" />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">ID de voz (opcional)</label>
+              <input type="text" value={form.voice_id} onChange={update("voice_id")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: rachel" />
+            </div>
+            {form.pipeline_type === "avatar_reel" && (
+              <div>
+                <label className="text-sm font-medium block mb-1">URL de noticia (opcional)</label>
+                <input type="url" value={form.news_url} onChange={update("news_url")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: https://example.com/news" />
+              </div>
+            )}
           </>
         )}
 
@@ -129,6 +163,10 @@ function RunPipelineForm() {
             <div>
               <label className="text-sm font-medium block mb-1">Número de slides</label>
               <input type="number" value={form.num_slides} onChange={update("num_slides")} min={3} max={12} className="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Hook personalizado (opcional)</label>
+              <input type="text" value={form.custom_hook} onChange={update("custom_hook")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: Descubre..." />
             </div>
           </>
         )}
