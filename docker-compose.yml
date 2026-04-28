@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: agente-contenido-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Carpetas compartidas con live reload en development
+      - ./api:/app/api
+      - ./skills:/app/skills
+      - ./outputs:/app/outputs
+      - ./brands:/app/brands
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+      - ./assemble_video.py:/app/assemble_video.py
+      - ./fix_audio_and_assemble.py:/app/fix_audio_and_assemble.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=sqlite:///./agente_contenido.db
+    command: >
+      uvicorn api.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dirs /app/api,/app/skills
+    restart: unless-stopped
+    networks:
+      - agente-network
+
+  # Opcional: descomentar si quieres levantar el dashboard también
+  # frontend:
+  #   image: node:18-alpine
+  #   container_name: agente-contenido-frontend
+  #   working_dir: /app/dashboard
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./dashboard:/app/dashboard
+  #     - ./.env:/app/.env
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://localhost:8000
+  #   command: sh -c "npm install && npm run dev"
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
+  #   networks:
+  #     - agente-network
+
+networks:
+  agente-network:
+    driver: bridge
