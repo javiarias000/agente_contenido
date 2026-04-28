@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     sync_so_api_key: str = ""
     fal_api_key: str = ""
 
+    # Video animation - Google Veo 3.1
+    google_veo_api_key: str = ""
+
     # Reddit (optional)
     reddit_client_id: str = ""
     reddit_client_secret: str = ""
@@ -31,7 +34,7 @@ class Settings(BaseSettings):
     dashboard_url: str = "http://localhost:3000"
 
     # OpenAI model names
-    text_model: str = "gpt-4-mini"
+    text_model: str = "gpt-4o-mini"
     image_model: str = "dall-e-3"
     whisper_model: str = "whisper-1"
 

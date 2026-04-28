@@ -18,10 +18,12 @@ class AvatarReelPipeline(BasePipeline):
         from skills.voice_generator import VoiceGenerator
         from skills.lip_sync import LipSyncSkill
         from skills.assembler import Assembler
+        from skills.video_animator import VideoAnimator
         return [
             StepDefinition(name="script_generate", skill_class=ScriptGenerator, skill_kwargs={}),
             StepDefinition(name="avatar_image", skill_class=ImageGenerator, skill_kwargs={}),
             StepDefinition(name="voice_generate", skill_class=VoiceGenerator, skill_kwargs={}),
             StepDefinition(name="lip_sync", skill_class=LipSyncSkill, skill_kwargs={}),
             StepDefinition(name="video_assemble", skill_class=Assembler, skill_kwargs={}),
+            StepDefinition(name="video_animate", skill_class=VideoAnimator, skill_kwargs={}),
         ]

@@ -14,6 +14,7 @@ from skills.script_generator import ScriptGenerator
 from skills.image_generator import ImageGenerator
 from skills.voice_generator import VoiceGenerator
 from skills.assembler import Assembler
+from skills.video_animator import VideoAnimator
 
 
 class _BrandLoadSkill:
@@ -80,6 +81,11 @@ class UGCPipeline(BasePipeline):
             StepDefinition(
                 name="video_assemble",
                 skill_class=Assembler,
+                skill_kwargs={},
+            ),
+            StepDefinition(
+                name="video_animate",
+                skill_class=VideoAnimator,
                 skill_kwargs={},
             ),
         ]

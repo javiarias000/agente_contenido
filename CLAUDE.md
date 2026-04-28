@@ -39,6 +39,7 @@ Copy `.env.example` to `.env` and fill in keys. Key settings:
 | `OPENAI_API_KEY` | GPT-4o, DALL-E 3, Whisper, TTS fallback |
 | `ELEVENLABS_API_KEY` | TTS (free tier cannot use library voices — falls back to OpenAI TTS) |
 | `SUNO_COOKIE` | Background music generation (optional) |
+| `GOOGLE_VEO_API_KEY` | Video animation via Google Gemini + ffmpeg (optional) |
 | `OUTPUTS_DIR` | Where generated files are saved (default: `./outputs`) |
 | `BRANDS_DIR` | Where brand JSON profiles are stored (default: `./brands`) |
 
@@ -78,6 +79,7 @@ Key skills:
 - `ImageGenerator` — DALL-E 3 or gpt-image-* per scene; semaphore limits concurrency. Detects model via `settings.image_model.startswith("gpt-image")`.
 - `VoiceGenerator` — ElevenLabs with automatic fallback to OpenAI TTS (`nova` voice). Falls back silently on 402/401 errors (free plan limitations).
 - `Assembler` — pure ffmpeg: builds per-scene clips, concatenates, transcribes with Whisper, burns subtitles, optionally adds Suno BGM.
+- `VideoAnimator` — Analyzes video frames with Google Gemini to determine motion type (zoom, pan, etc), then applies cinematic effects using ffmpeg. Requires `GOOGLE_VEO_API_KEY`. Falls back gracefully if not configured.
 
 **Audio output must be 44100 Hz stereo.** OpenAI TTS generates 24 kHz mono by default; always resample with `-ar 44100 -ac 2` when muxing.
 

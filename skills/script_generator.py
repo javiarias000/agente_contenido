@@ -46,10 +46,11 @@ Return ONLY valid JSON."""
 SCENE_SYSTEM = """You are an expert short-form video scriptwriter. Expand this scene into full content.
 Return JSON with:
 {
-  "visual_description": "string (detailed visual prompt for AI image generation, include setting, lighting, mood)",
+  "visual_description": "string (detailed visual prompt for AI image generation with REALISTIC, DYNAMIC elements. Include: setting, lighting, mood, composition. Emphasize natural movement, active poses, and dynamic camera perspectives. Use cinematic language)",
   "speaker_text": "string (exact words to speak in this scene)",
   "on_screen_text": "string or null (text overlay, caption card, or null if none)"
 }
+IMPORTANT: visual_description must be detailed and realistic, optimized for motion-based video generation. Focus on elements that will create dynamic, fluid movement when animated.
 Return ONLY valid JSON."""
 
 
