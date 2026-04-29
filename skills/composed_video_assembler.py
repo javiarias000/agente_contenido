@@ -18,6 +18,11 @@ OUTPUT_HEIGHT = 1920
 OUTPUT_FPS = 30
 SAFE_AREA_PERCENT = 0.05  # 5% safe area on edges
 
+# FFmpeg codec settings
+VIDEO_CODEC = "libx264"  # libx264 for compatibility, can switch to libx265 for better quality
+VIDEO_PRESET = "superfast"  # ultrafast|superfast|veryfast|faster|fast|medium|slow|slower|veryslow
+VIDEO_CRF = "28"  # 0=lossless, 23=default, 51=worst quality. Lower = better but larger file
+
 
 def _get_audio_duration(path: str) -> float:
     """Get audio duration using ffprobe."""
@@ -106,10 +111,18 @@ class ComposedVideoAssembler(BaseSkill):
                 if os.path.exists(subtitled_path):
                     final_path = subtitled_path
 
-            # Cleanup
-            for p in scene_clips + [concat_path]:
+            # Cleanup temporary files
+            # Only delete scene clips; keep final video
+            for p in scene_clips:
                 try:
                     os.remove(p)
+                except Exception:
+                    pass
+
+            # If we created subtitled version, clean up concat version
+            if final_path != concat_path:
+                try:
+                    os.remove(concat_path)
                 except Exception:
                     pass
 
@@ -170,12 +183,12 @@ class ComposedVideoAssembler(BaseSkill):
                 "-vf", filter_graph,
                 "-r", str(OUTPUT_FPS),
                 "-pix_fmt", "yuv420p",
-                "-c:v", "libx264", "-preset", "fast",
+                "-c:v", VIDEO_CODEC, "-preset", VIDEO_PRESET, "-crf", VIDEO_CRF,
                 "-c:a", "aac", "-shortest",
                 out_path
             ]
 
-            result = subprocess.run(cmd, capture_output=True, timeout=120)
+            result = subprocess.run(cmd, capture_output=True, timeout=300)
             if result.returncode == 0 and os.path.exists(out_path):
                 clips.append(out_path)
                 await self.emit("progress", f"Clip {i+1} generado")
@@ -202,16 +215,27 @@ class ComposedVideoAssembler(BaseSkill):
         return scale_pad
 
     def _motion_filter(self, motion_type: str, duration: float) -> str:
-        """Generate motion filter string for ffmpeg."""
-        # Ken Burns effect: gentle zoom + pan
+        """Generate motion filter string for ffmpeg.
+
+        Optimized to avoid double-scaling. Motion is achieved through crop/pad
+        rather than additional scaling operations.
+        """
         if motion_type == "zoom_in":
-            return f"scale=iw*1.1:ih*1.1,crop={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(iw-ow)/2:(ih-oh)/2"
+            # Simulate zoom in by cropping center (image already padded)
+            crop_w = int(OUTPUT_WIDTH * 0.95)
+            crop_h = int(OUTPUT_HEIGHT * 0.95)
+            return f"crop={crop_w}:{crop_h}:(iw-{crop_w})/2:(ih-{crop_h})/2,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
         elif motion_type == "zoom_out":
-            return f"scale=iw*0.95:ih*0.95,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
+            # Already achieved by padding in scale_pad
+            return ""
         elif motion_type == "pan_left":
-            return f"crop={int(OUTPUT_WIDTH*0.95)}:{OUTPUT_HEIGHT}:0:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0"
+            # Crop right side and pad left
+            crop_w = int(OUTPUT_WIDTH * 0.95)
+            return f"crop={crop_w}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0"
         elif motion_type == "pan_right":
-            return f"crop={int(OUTPUT_WIDTH*0.95)}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:0:0"
+            # Crop left side and pad right
+            crop_w = int(OUTPUT_WIDTH * 0.95)
+            return f"crop={crop_w}:{OUTPUT_HEIGHT}:0:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0"
         else:
             return ""
 
@@ -224,7 +248,8 @@ class ComposedVideoAssembler(BaseSkill):
 
         subprocess.run(
             ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path,
-             "-c:v", "libx264", "-c:a", "aac", output_path],
+             "-c:v", VIDEO_CODEC, "-preset", VIDEO_PRESET, "-crf", VIDEO_CRF,
+             "-c:a", "aac", output_path],
             capture_output=True, timeout=300,
         )
         os.remove(list_path)

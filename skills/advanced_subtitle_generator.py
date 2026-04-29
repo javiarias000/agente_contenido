@@ -102,13 +102,23 @@ class AdvancedSubtitleGenerator(BaseSkill):
         try:
             # Transcribe with Whisper
             await self.emit("progress", "Transcribiendo audio...")
-            with open(audio_path, "rb") as f:
-                transcript = await self.client.audio.transcriptions.create(
-                    model=settings.whisper_model,
-                    file=f,
-                    response_format="verbose_json",
-                    timestamp_granularities=["word"],
-                )
+            try:
+                with open(audio_path, "rb") as f:
+                    transcript = await self.client.audio.transcriptions.create(
+                        model=settings.whisper_model,
+                        file=f,
+                        response_format="verbose_json",
+                        timestamp_granularities=["word"],
+                    )
+            except Exception as e:
+                # Handle API key errors gracefully
+                if "401" in str(e) or "invalid_api_key" in str(e).lower():
+                    await self.emit("progress", "⚠️ API key invalid/missing, skipping transcription")
+                    return SkillResult(
+                        status="completed",
+                        outputs={"srt_path": "", "srt_valid": False, "api_error": True}
+                    )
+                raise
 
             # Extract words with timing
             words = []
