@@ -21,12 +21,15 @@ function RunPipelineForm() {
     competitor_name: "",
     custom_hook: "",
     voice_id: "",
+    user_photo_path: "",
     num_ads: 10,
     topic: "",
     num_slides: 6,
     news_url: "",
   });
   const [loading, setLoading] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoLoading, setPhotoLoading] = useState(false);
   const [error, setError] = useState("");
   const { data: brands } = useSWR("brands", api.listBrands);
 
@@ -37,6 +40,38 @@ function RunPipelineForm() {
     }
     setForm(f => ({ ...f, [k]: value }));
   };
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoFile(file);
+    setPhotoLoading(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/uploads/photo", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || "Error al subir foto");
+      }
+
+      const data = await response.json();
+      setForm(f => ({ ...f, user_photo_path: data.photo_path }));
+    } catch (err: any) {
+      setError(err.message || "Error al subir la foto");
+      setPhotoFile(null);
+    } finally {
+      setPhotoLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -138,6 +173,24 @@ function RunPipelineForm() {
               <label className="text-sm font-medium block mb-1">ID de voz (opcional)</label>
               <input type="text" value={form.voice_id} onChange={update("voice_id")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: rachel" />
             </div>
+            {form.pipeline_type === "ugc" && (
+              <div>
+                <label className="text-sm font-medium block mb-1">Foto del producto (opcional)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    disabled={photoLoading}
+                    className="flex-1 border rounded-lg px-3 py-2 text-sm file:mr-2 file:px-3 file:py-1.5 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700"
+                  />
+                  {photoLoading && <span className="text-xs text-gray-400">Cargando...</span>}
+                </div>
+                {photoFile && !photoLoading && (
+                  <p className="text-xs text-green-600 mt-1">✓ Foto cargada: {photoFile.name}</p>
+                )}
+              </div>
+            )}
             {form.pipeline_type === "avatar_reel" && (
               <div>
                 <label className="text-sm font-medium block mb-1">URL de noticia (opcional)</label>
