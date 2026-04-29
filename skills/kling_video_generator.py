@@ -39,26 +39,25 @@ class KlingVideoGenerator(BaseSkill):
         """Generate video from image.
 
         Expected inputs:
-            - image_path: Path to input image
+            - user_photo_path or image_path: Path to input image
             - script: Script dict with scenes (to determine number of clips)
             - duration_seconds: Duration per clip (default 6)
         """
-        image_path = inputs.get("image_path", "")
+        image_path = inputs.get("user_photo_path") or inputs.get("image_path", "")
         script = inputs.get("script", {})
         duration_seconds = inputs.get("duration_seconds", 6)
 
         if not image_path or not os.path.exists(image_path):
+            await self.emit("progress", f"⚠️  No image path provided, skipping Kling generation")
             return SkillResult(
                 status="failed",
                 outputs={"error": f"Image not found: {image_path}"}
             )
 
+        # If no fal_api_key, fallback to static video clips from image
         if not settings.fal_api_key:
-            await self.emit("progress", "⚠️  fal_api_key not configured, skipping Kling generation")
-            return SkillResult(
-                status="failed",
-                outputs={"error": "fal_api_key not configured"}
-            )
+            await self.emit("progress", "⚠️  fal_api_key not configured, usando fallback con clips estáticos")
+            return await self._generate_static_video_clips(image_path, script, duration_seconds)
 
         await self.emit("step_start", "Generando video con Kling...")
 
@@ -73,11 +72,10 @@ class KlingVideoGenerator(BaseSkill):
             # Generate video using Kling
             kling_video_path = await self._generate_kling_video(image_path, duration_seconds)
 
+            # If Kling fails, fallback to static video clips
             if not kling_video_path or not os.path.exists(kling_video_path):
-                return SkillResult(
-                    status="failed",
-                    outputs={"error": "Failed to generate Kling video"}
-                )
+                await self.emit("progress", "⚠️  Kling generó error, usando fallback con clips estáticos...")
+                return await self._generate_static_video_clips(image_path, script, duration_seconds)
 
             # Split the generated video into N equal clips for each scene
             video_dir = os.path.join(settings.outputs_dir, "video")
@@ -275,3 +273,75 @@ class KlingVideoGenerator(BaseSkill):
                 await self.emit("progress", f"⚠️  Failed to extract clip {i+1}: {e}")
 
         return scene_clips
+
+    async def _generate_static_video_clips(
+        self, image_path: str, script: dict, duration_seconds: int
+    ) -> SkillResult:
+        """Fallback: Generate static video clips from image with zoom effect."""
+        video_dir = os.path.join(settings.outputs_dir, "video")
+        os.makedirs(video_dir, exist_ok=True)
+
+        scenes = script.get("scenes", [])
+        num_scenes = len(scenes)
+        scene_clips = []
+
+        await self.emit("progress", f"Generando clips estáticos con zoom automático ({num_scenes} escenas)...")
+
+        for i in range(num_scenes):
+            scene_duration = duration_seconds
+            output_path = os.path.join(video_dir, f"{self.run_id}_static_scene_{i}.mp4")
+
+            # FFmpeg: image con zoom_in effect
+            cmd = [
+                "ffmpeg", "-y",
+                "-loop", "1", "-i", image_path,
+                "-t", str(scene_duration),
+                "-vf", (
+                    f"scale=1080:1920:force_original_aspect_ratio=decrease,"
+                    f"pad=1080:1920:(ow-iw)/2:(oh-ih)/2,"
+                    f"zoompan=z='min(zoom+0.0015,1.5)':d={int(scene_duration * 30)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':fps=30"
+                ),
+                "-r", "30",
+                "-pix_fmt", "yuv420p",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+                output_path
+            ]
+
+            try:
+                subprocess.run(cmd, capture_output=True, timeout=120)
+                if os.path.exists(output_path):
+                    scene_clips.append(output_path)
+                    await self.emit("progress", f"✅ Clip {i+1}/{num_scenes} generado con zoom")
+            except Exception as e:
+                await self.emit("progress", f"⚠️  Failed to generate clip {i+1}: {e}")
+
+        if not scene_clips:
+            return SkillResult(
+                status="failed",
+                outputs={"error": "Failed to generate static video clips"}
+            )
+
+        # Create motion metadata
+        motion_metadata = []
+        for i, scene_path in enumerate(scene_clips):
+            motion_metadata.append({
+                "scene_index": i,
+                "image_path": image_path,
+                "motion_type": "static_zoom",
+                "duration_seconds": duration_seconds,
+                "video_path": scene_path,
+            })
+
+        await self.emit(
+            "step_complete",
+            f"Videos estáticos generados ({len(scene_clips)} clips)",
+            data={"video_paths": scene_clips},
+        )
+
+        return SkillResult(
+            status="completed",
+            outputs={
+                "video_paths": scene_clips,
+                "motion_metadata": motion_metadata,
+            }
+        )
