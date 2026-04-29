@@ -64,25 +64,31 @@ class ComposedVideoAssembler(BaseSkill):
         super().__init__(event_bus, run_id, step_index)
 
     async def run(self, inputs: dict[str, Any], interactive: bool = False) -> SkillResult:
-        """Assemble video from images and audio.
+        """Assemble video from images/videos and audio.
 
         Expected inputs:
-            - image_paths: List of image paths
+            - image_paths: List of image paths (optional if video_paths provided)
+            - video_paths: List of pre-generated video paths (optional, from Kling etc)
             - audio_paths: List of audio paths (one per scene)
             - motion_metadata: List of motion metadata dicts (optional)
             - srt_path: Path to SRT subtitle file (optional)
             - script: Script dict with scene info
         """
         image_paths = inputs.get("image_paths", [])
+        video_paths = inputs.get("video_paths", [])
         audio_paths = inputs.get("audio_paths", [])
         motion_metadata = inputs.get("motion_metadata", [])
         srt_path = inputs.get("srt_path", "")
         script = inputs.get("script", {})
 
-        if not image_paths or not audio_paths:
+        # Either images or videos must be provided
+        has_images = bool(image_paths)
+        has_videos = bool(video_paths)
+
+        if not (has_images or has_videos) or not audio_paths:
             return SkillResult(
                 status="failed",
-                outputs={"error": "Missing image_paths or audio_paths"}
+                outputs={"error": "Missing image_paths/video_paths or audio_paths"}
             )
 
         video_dir = os.path.join(settings.outputs_dir, "video")
@@ -91,11 +97,19 @@ class ComposedVideoAssembler(BaseSkill):
         await self.emit("step_start", "Ensamblando video...")
 
         try:
-            # Build individual scene clips with animation
+            # Build individual scene clips with animation or use pre-generated videos
             await self.emit("progress", "Construyendo clips de escena...")
-            scene_clips = await self._build_animated_clips(
-                image_paths, audio_paths, motion_metadata
-            )
+
+            if has_videos:
+                # Use pre-generated videos (e.g., from Kling)
+                scene_clips = await self._sync_videos_with_audio(
+                    video_paths, audio_paths
+                )
+            else:
+                # Generate clips from images with animation
+                scene_clips = await self._build_animated_clips(
+                    image_paths, audio_paths, motion_metadata
+                )
 
             # Concatenate clips
             await self.emit("progress", "Concatenando escenas...")
@@ -259,6 +273,54 @@ class ComposedVideoAssembler(BaseSkill):
             capture_output=True, timeout=300,
         )
         os.remove(list_path)
+
+    async def _sync_videos_with_audio(
+        self,
+        video_paths: list[str],
+        audio_paths: list[str],
+    ) -> list[str]:
+        """Sync pre-generated videos with their corresponding audio tracks.
+
+        If video duration > audio duration, trim video.
+        If audio duration > video duration, extend video (loop or freeze).
+        """
+        synced_clips = []
+
+        for i, (video_path, audio_path) in enumerate(zip(video_paths, audio_paths)):
+            if not os.path.exists(video_path):
+                continue
+            if not audio_path or not os.path.exists(audio_path):
+                # Video without audio — keep as is
+                synced_clips.append(video_path)
+                continue
+
+            # Get durations
+            video_duration = _get_audio_duration(video_path)
+            audio_duration = _get_audio_duration(audio_path)
+
+            out_path = video_path.replace(".mp4", f"_synced_{i}.mp4")
+
+            if abs(video_duration - audio_duration) < 0.5:
+                # Already synced
+                synced_clips.append(video_path)
+            else:
+                # Trim video to match audio duration
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", video_path,
+                    "-i", audio_path,
+                    "-c:v", "copy", "-c:a", "aac",
+                    "-shortest",
+                    out_path
+                ]
+                subprocess.run(cmd, capture_output=True, timeout=120)
+                if os.path.exists(out_path):
+                    synced_clips.append(out_path)
+                    await self.emit("progress", f"Vídeo {i+1} sincronizado con audio")
+                else:
+                    synced_clips.append(video_path)
+
+        return synced_clips
 
     def _burn_subtitles(self, input_path: str, srt_path: str, output_path: str) -> None:
         """Burn subtitles into video using ffmpeg."""

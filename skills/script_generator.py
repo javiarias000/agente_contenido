@@ -93,7 +93,12 @@ class ScriptGenerator(BaseSkill):
         target_duration: int = inputs.get("target_duration", 60)
         custom_hook: str | None = inputs.get("custom_hook")
         competitor_name: str | None = inputs.get("competitor_name")
+        photo_analysis: dict = inputs.get("photo_analysis", {})
         profile: dict = inputs.get("profile") or self._load_brand(brand_slug)
+
+        # If photo was analyzed, use suggested hook and inject photo context
+        if photo_analysis and not custom_hook:
+            custom_hook = photo_analysis.get("suggested_hook")
 
         template = TEMPLATES.get(angle_type, TEMPLATES["sales"])
         template.validate_inputs({**inputs, "competitor_name": competitor_name})
@@ -123,6 +128,11 @@ class ScriptGenerator(BaseSkill):
         ctx.brand_colors = color_palette
         ctx.brand_color_mood = brand_colors.get("mood", "")
         ctx.posts_insights = profile.get("posts_insights", {})
+
+        # If photo was analyzed, store its context for LLM
+        if photo_analysis:
+            ctx.photo_context = photo_analysis.get("full_context", "")
+            ctx.product_name = photo_analysis.get("product_name", "")
 
         await self.emit("step_start", f"Generando guión para {brand_slug} — ángulo: {angle_type}")
 

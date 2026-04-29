@@ -28,6 +28,8 @@ class PipelineRunRequest(BaseModel):
     target_duration: int = 60
     competitor_name: str | None = None
     custom_hook: str | None = None
+    # UGC with user photo
+    user_photo_path: str | None = None
     # Avatar reel
     news_url: str | None = None
     # Static ads

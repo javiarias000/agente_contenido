@@ -39,13 +39,14 @@ os.makedirs("./outputs", exist_ok=True)
 app.mount("/outputs", StaticFiles(directory="./outputs"), name="outputs")
 
 # Routers (imported here to avoid circular imports at module load)
-from api.routers import brands, pipelines, outputs, scripts, media  # noqa: E402
+from api.routers import brands, pipelines, outputs, scripts, media, uploads  # noqa: E402
 
 app.include_router(brands.router, prefix="/api/brands", tags=["brands"])
 app.include_router(pipelines.router, prefix="/api/pipelines", tags=["pipelines"])
 app.include_router(outputs.router, prefix="/api/outputs", tags=["outputs"])
 app.include_router(scripts.router, prefix="/api/scripts", tags=["scripts"])
 app.include_router(media.router, prefix="/api/media", tags=["media"])
+app.include_router(uploads.router, prefix="/api", tags=["uploads"])
 
 
 @app.get("/api/health")

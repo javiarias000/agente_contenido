@@ -12,6 +12,8 @@ from pipelines.base_pipeline import BasePipeline, StepDefinition
 from skills.brand_analyzer import BrandAnalyzer
 from skills.script_generator import ScriptGenerator
 from skills.animated_image_generator import AnimatedImageGenerator
+from skills.photo_analyzer import PhotoAnalyzer
+from skills.kling_video_generator import KlingVideoGenerator
 from skills.voice_generator import VoiceGenerator
 from skills.advanced_subtitle_generator import AdvancedSubtitleGenerator
 from skills.composed_video_assembler import ComposedVideoAssembler
@@ -80,27 +82,60 @@ class UGCPipeline(BasePipeline):
         super().__init__(event_bus, run_id, db_session)
 
     def build_steps(self, inputs: dict[str, Any]) -> list[StepDefinition]:
-        return [
+        has_photo = bool(inputs.get("user_photo_path"))
+
+        steps = [
             StepDefinition(
                 name="brand_load",
                 skill_class=_BrandLoadSkill,
                 skill_kwargs={"db_session": self.db},
             ),
+        ]
+
+        # If user uploaded a photo, analyze it
+        if has_photo:
+            steps.append(
+                StepDefinition(
+                    name="photo_analyze",
+                    skill_class=PhotoAnalyzer,
+                    skill_kwargs={},
+                )
+            )
+
+        steps.extend([
             StepDefinition(
                 name="script_generate",
                 skill_class=ScriptGenerator,
                 skill_kwargs={},
             ),
-            StepDefinition(
-                name="image_generate",
-                skill_class=AnimatedImageGenerator,
-                skill_kwargs={},
-            ),
-            StepDefinition(
-                name="image_enhance",
-                skill_class=ImageQualityImprover,
-                skill_kwargs={},
-            ),
+        ])
+
+        # Generate video differently based on whether we have a photo
+        if has_photo:
+            steps.append(
+                StepDefinition(
+                    name="video_generate",
+                    skill_class=KlingVideoGenerator,
+                    skill_kwargs={},
+                )
+            )
+        else:
+            steps.append(
+                StepDefinition(
+                    name="image_generate",
+                    skill_class=AnimatedImageGenerator,
+                    skill_kwargs={},
+                )
+            )
+            steps.append(
+                StepDefinition(
+                    name="image_enhance",
+                    skill_class=ImageQualityImprover,
+                    skill_kwargs={},
+                )
+            )
+
+        steps.extend([
             StepDefinition(
                 name="voice_generate",
                 skill_class=VoiceGenerator,
@@ -116,4 +151,6 @@ class UGCPipeline(BasePipeline):
                 skill_class=ComposedVideoAssembler,
                 skill_kwargs={},
             ),
-        ]
+        ])
+
+        return steps
