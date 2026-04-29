@@ -44,8 +44,8 @@ class ImageQualityImprover(BaseSkill):
 
         if not image_path or not Path(image_path).exists():
             return SkillResult(
-                status="error",
-                error_message=f"Image not found: {image_path}"
+                status="failed",
+                outputs={"error": f"Image not found: {image_path}"}
             )
 
         await self.emit("step_start", f"Mejorando calidad de imagen: {Path(image_path).name}")
@@ -97,8 +97,8 @@ class ImageQualityImprover(BaseSkill):
                 await self.emit("progress", "✅ Mejora de brillo/contraste completada")
             else:
                 return SkillResult(
-                    status="error",
-                    error_message="Failed to enhance image"
+                    status="failed",
+                    outputs={"error": "Failed to enhance image"}
                 )
 
             # Step 3: Apply brand colors if requested
@@ -145,6 +145,6 @@ class ImageQualityImprover(BaseSkill):
         except Exception as e:
             await self.emit("progress", f"❌ Error: {e}")
             return SkillResult(
-                status="error",
-                error_message=str(e)
+                status="failed",
+                outputs={"error": str(e)}
             )
