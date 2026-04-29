@@ -30,6 +30,8 @@ def _build_image_prompt(
     character_anchor: str,
     style_notes: str,
     scene_index: int,
+    brand_colors: list[str] | None = None,
+    color_mood: str = "",
 ) -> str:
     parts = []
     if character_anchor:
@@ -37,6 +39,14 @@ def _build_image_prompt(
     parts.append(visual_description)
     if style_notes:
         parts.append(f"Visual style: {style_notes}")
+
+    # Add brand colors to prompt
+    if brand_colors:
+        colors_str = ", ".join(brand_colors)
+        parts.append(f"Color palette: {colors_str}. Use these brand colors prominently")
+    if color_mood:
+        parts.append(f"Color mood: {color_mood}")
+
     parts.append("Photorealistic, high quality, professional lighting")
     if scene_index == 0:
         parts.append("Eye-catching, strong composition for hook scene")
@@ -60,11 +70,21 @@ class ImageGenerator(BaseSkill):
         style_notes: str = profile.get("style_notes", "")
         size = PLATFORM_SIZES.get(platform, SIZE_VERTICAL)
 
+        # Extract brand colors
+        brand_colors = profile.get("colors", {})
+        color_palette = brand_colors.get("palette", []) or [
+            brand_colors.get("primary", ""),
+            brand_colors.get("secondary", ""),
+        ]
+        color_palette = [c for c in color_palette if c]
+        color_mood = brand_colors.get("mood", "")
+
         scenes = script.get("scenes", [])
         await self.emit("step_start", f"Generando {len(scenes)} imágenes con {settings.image_model}...")
 
         image_paths = await self._generate_all(
-            scenes, character_anchor, style_notes, size, interactive
+            scenes, character_anchor, style_notes, size, interactive,
+            brand_colors=color_palette, color_mood=color_mood
         )
 
         await self.emit(
@@ -82,8 +102,13 @@ class ImageGenerator(BaseSkill):
         size: str = SIZE_VERTICAL,
         scene_index: int = 0,
         save_path: str | None = None,
+        brand_colors: list[str] | None = None,
+        color_mood: str = "",
     ) -> str:
-        prompt = _build_image_prompt(visual_description, character_anchor, style_notes, scene_index)
+        prompt = _build_image_prompt(
+            visual_description, character_anchor, style_notes, scene_index,
+            brand_colors=brand_colors, color_mood=color_mood
+        )
         async with self._semaphore:
             is_gpt_image = settings.image_model.startswith("gpt-image")
             kwargs: dict = {
@@ -124,6 +149,8 @@ class ImageGenerator(BaseSkill):
         style_notes: str,
         size: str,
         interactive: bool,
+        brand_colors: list[str] | None = None,
+        color_mood: str = "",
     ) -> list[str]:
         tasks = [
             self.generate_single(
@@ -132,6 +159,8 @@ class ImageGenerator(BaseSkill):
                 style_notes=style_notes,
                 size=size,
                 scene_index=s.get("index", i),
+                brand_colors=brand_colors,
+                color_mood=color_mood,
             )
             for i, s in enumerate(scenes)
         ]

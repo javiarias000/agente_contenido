@@ -15,6 +15,7 @@ from skills.image_generator import ImageGenerator
 from skills.voice_generator import VoiceGenerator
 from skills.assembler import Assembler
 from skills.video_animator import VideoAnimator
+from skills.image_quality_improver import ImageQualityImprover
 
 
 class _BrandLoadSkill:
@@ -29,24 +30,46 @@ class _BrandLoadSkill:
 
     async def run(self, inputs: dict[str, Any], interactive: bool = False):
         from skills import SkillResult
+        from api.events import PipelineEvent
+        from datetime import datetime
+
         slug = inputs["brand_slug"]
         path = os.path.join(settings.brands_dir, f"{slug}.json")
+
         if os.path.exists(path):
             with open(path) as f:
                 profile = json.load(f)
         else:
             # Auto-analyze if brand JSON doesn't exist but URL was given
-            from api.events import PipelineEvent
-            from datetime import datetime
             if inputs.get("brand_url"):
                 analyzer = BrandAnalyzer(self.event_bus, self.run_id, self.db, self.step_index)
                 res = await analyzer.run({"url": inputs["brand_url"], "name": slug}, interactive)
                 profile = res.outputs.get("profile", {})
             else:
                 profile = {"name": slug, "slug": slug}
+
+        # Load brand assets analysis if available
+        asset_dir = os.path.join(settings.brands_dir.replace("brands", "brand_assets"), slug)
+        if os.path.exists(asset_dir):
+            # Load logo analysis
+            logo_analysis_path = os.path.join(asset_dir, "logo_analysis.json")
+            if os.path.exists(logo_analysis_path):
+                with open(logo_analysis_path) as f:
+                    logo_analysis = json.load(f)
+                    profile["logo_colors"] = logo_analysis.get("all_colors", [])
+                    profile["logo_analysis"] = logo_analysis.get("detailed_analyses", {})
+
+            # Load posts analysis
+            posts_analysis_path = os.path.join(asset_dir, "posts_analysis.json")
+            if os.path.exists(posts_analysis_path):
+                with open(posts_analysis_path) as f:
+                    posts_analysis = json.load(f)
+                    profile["posts_insights"] = posts_analysis
+
         # Inject character_description from inputs if provided
         if inputs.get("character_description"):
             profile["character_anchor"] = inputs["character_description"]
+
         return SkillResult(status="completed", outputs={"profile": profile, "brand_slug": slug})
 
 
@@ -71,6 +94,11 @@ class UGCPipeline(BasePipeline):
             StepDefinition(
                 name="image_generate",
                 skill_class=ImageGenerator,
+                skill_kwargs={},
+            ),
+            StepDefinition(
+                name="image_enhance",
+                skill_class=ImageQualityImprover,
                 skill_kwargs={},
             ),
             StepDefinition(

@@ -1,0 +1,87 @@
+{
+  "name": "Mi Idea",
+  "slug": "mi-idea",
+  "url": "https://www.facebook.com/pg/1130355880150943",
+  "analyzed_at": "2026-04-29T14:54:47.159143",
+  "colors": {
+    "primary": "#D35400",
+    "secondary": "#A84327",
+    "tertiary": "#E68A59",
+    "dark": "#5C2B17",
+    "accent": "#000000",
+    "light": "#FFFFFF",
+    "palette": [
+      "#D35400",
+      "#A84327",
+      "#5C2B17",
+      "#E68A59",
+      "#000000",
+      "#FFFFFF"
+    ],
+    "sources": {
+      "logo_primary": "#D35400 (Orange, Logo 1)",
+      "logo_brown_tones": "#A84327, #5C2B17 (Logo 2)",
+      "logo_light_orange": "#E68A59"
+    },
+    "temperature": "warm",
+    "contrast": "medium",
+    "mood": "Creative, energetic, modern, minimalist"
+  },
+  "typography": {
+    "heading_font": "sans-serif",
+    "body_font": "sans-serif",
+    "all_fonts": []
+  },
+  "business_type": "Corte láser y diseño de estructuras",
+  "tone_of_voice": "El tono de voz de Mi Idea es creativo y profesional, reflejando una pasión por el diseño y la manufactura de calidad. Se comunica de manera accesible y amigable, invitando a los clientes a explorar su creatividad.",
+  "target_audience": "El público objetivo de Mi Idea incluye diseñadores, arquitectos y emprendedores que buscan soluciones personalizadas en corte láser y diseño de estructuras. Son personas de entre 25 y 45 años, con un interés en la artesanía y el diseño, que valoran la calidad y la personalización en los productos que adquieren.",
+  "brand_values": [
+    "Creatividad",
+    "Calidad",
+    "Personalización",
+    "Innovación",
+    "Sostenibilidad"
+  ],
+  "style_notes": "La estética visual de Mi Idea se caracteriza por una paleta de colores cálidos y terrosos, como marrones y naranjas, que evocan un sentido de naturalidad y artesanía. El estilo es moderno y minimalista, con un enfoque en la presentación clara de productos y procesos de diseño.",
+  "content_suggestions": [
+    "Tutoriales en video sobre el proceso de corte láser y diseño de productos personalizados.",
+    "Historias de clientes que han utilizado sus servicios para crear proyectos únicos.",
+    "Publicaciones destacando el uso de materiales sostenibles en sus productos.",
+    "Imágenes de antes y después de proyectos de diseño realizados.",
+    "Concursos de diseño donde los seguidores pueden presentar sus ideas para ganar un producto personalizado."
+  ],
+  "character_anchor": "El portavoz ideal de Mi Idea es una persona creativa y apasionada por el diseño, de entre 30 y 40 años, con un estilo moderno y profesional. Tiene cabello castaño claro o oscuro, viste ropa casual pero elegante, y muestra entusiasmo al hablar sobre el proceso de diseño y corte láser, reflejando la personalidad amigable y accesible de la marca.",
+  "posts_insights": {
+    "posts_analyzed": 10,
+    "content_types": {
+      "product": "90%",
+      "other": "10%"
+    },
+    "average_quality": "7.5/10",
+    "quality_issues": [
+      "Iluminación: Necesita mejora en 40% de posts",
+      "Contraste: Fondos neutros pero podrían ser más contrastantes",
+      "Nitidez: Algunos posts tienen enfoque marginal"
+    ],
+    "colors_in_posts": [
+      "#D2B48C (tan/madera clara)",
+      "#8B4513 (marrón oscuro)",
+      "#D9B38C (marrón claro)",
+      "#FF7070 (rosa/detalles)",
+      "#3B2D2A (marrón muy oscuro)"
+    ],
+    "content_recommendations": [
+      "Mejorar iluminación profesional para todos los products",
+      "Usar fondos más contrastantes para destacar productos",
+      "Incluir close-ups de detalles del corte láser",
+      "Mostrar productos en contexto de uso",
+      "Process videos del corte láser (engagement alto)",
+      "Before & after de proyectos personalizados"
+    ],
+    "engagement_potential": {
+      "high": "Process videos, personalization stories",
+      "medium": "Product showcases, designs",
+      "needs_improvement": "Current lighting and background quality"
+    }
+  }
+}

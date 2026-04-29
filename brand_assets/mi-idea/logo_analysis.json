@@ -1,0 +1,71 @@
+{
+  "logos_analyzed": 2,
+  "all_colors": [
+    "#000000",
+    "#D35400"
+  ],
+  "detailed_analyses": {
+    "102027538378817.png": {
+      "colores_principales": {
+        "color_primario": "#D35400",
+        "color_secundario": "#000000"
+      },
+      "tipografia": {
+        "estilo_fuente": "script",
+        "peso": "regular",
+        "caracteristicas_especiales": "Combinación de letras con ligaduras fluidas, cursivas y un diseño creativo."
+      },
+      "elementos_visuales": {
+        "elementos_geometricos": "Curvas en las letras, sin formas geométricas definidas.",
+        "simbolos_o_iconos": "No hay símbolos ni iconos específicos.",
+        "composicion_y_equilibrio": "Equilibrio en el uso del espacio negativo, con un diseño fluido y orgánico.",
+        "estilo": "Moderno y creativo"
+      },
+      "paleta_de_colores_general": {
+        "temperatura": "cálida",
+        "contraste": "medio",
+        "sentimiento": "Transmite creatividad, energía y modernidad."
+      },
+      "recomendaciones_para_contenido_visual": {
+        "colores_complementarios": [
+          "#34A853",
+          "#4285F4"
+        ],
+        "estilo_de_imagenes": "Imágenes con un estilo moderno y vibrante, que utilicen líneas fluidas y colores brillantes.",
+        "mood_atmosfera": "Mantener un ambiente creativo, innovador y enérgico."
+      }
+    },
+    "102026915045546.png": {
+      "colors": {
+        "primary": "#A84327",
+        "secondary": "#5C2B17",
+        "tertiary": "#E68A59",
+        "additional": "#FFFFFF"
+      },
+      "typography": {
+        "fontStyle": "script",
+        "weight": "regular",
+        "specialFeatures": "Handwritten style with playful curves"
+      },
+      "visualElements": {
+        "geometricElements": "Circle, polygonal shapes resembling a fox",
+        "symbols": "Fox head icon",
+        "composition": "Centered, well-balanced composition",
+        "style": "Modern and minimalistic"
+      },
+      "colorPalette": {
+        "temperature": "warm",
+        "contrast": "medium",
+        "feeling": "Creative, inviting, and playful"
+      },
+      "visualContentRecommendations": {
+        "complementaryColors": [
+          "#2D84FB",
+          "#F5E3C3"
+        ],
+        "imageStyle": "Illustrative, vibrant, and creative",
+        "mood": "Energetic and imaginative"
+      }
+    }
+  }
+}

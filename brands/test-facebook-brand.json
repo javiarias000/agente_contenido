@@ -1,0 +1,42 @@
+{
+  "name": "Test Facebook Brand",
+  "slug": "test-facebook-brand",
+  "url": "https://www.facebook.com/pg/1130355880150943",
+  "analyzed_at": "2026-04-29T14:49:28.038201",
+  "colors": {
+    "palette": [
+      "#aa734d",
+      "#a73416",
+      "#bb5b2c",
+      "#2a1c1b",
+      "#d89b71"
+    ],
+    "sources": {
+      "profile_picture": "https://scontent.fetr1-1.fna.fbcdn.net/v/t39.30808-1/674761338_26931049746526307_697926036254280677_n.jpg?stp=c0.0.467.467a_cp0_dst-jpg_s50x50_tt6&_nc_cat=111&ccb=1-7&_nc_sid=f907e8&_nc_eui2=AeEqjYhIPVqcUWVPu-si8D-nXT0WsQH1agVdPRaxAfVqBcn2UpI8sgKje3-51a2LIc53TXcZYb0T_QoDESw_fphF&_nc_ohc=tUzNKTZWmMgQ7kNvwGoOm9g&_nc_oc=Ado2ZOJmjhdqrr92iykAJ7KKsbSA_hOLTwwKscEDQ4p8QKcQcQNzxe8nB5CJjj_ZBEU&_nc_zt=24&_nc_ht=scontent.fetr1-1.fna&edm=AJdBtusEAAAA&_nc_gid=zBTm5I4gMCq_8aQ2dVTtlw&_nc_tpa=Q5bMBQE_I5NJ4wTh_vbO1ZMfZL3JuSajG7LMcDo4LiNypWWqtsEDKfduZ31LvkmvjXO7wNIr62rK8UXXBw&oh=00_Af1id8FFw4poK74-kCt2QIp7-64xcM1p40l5abU3GvmAuw&oe=69F7E631"
+    }
+  },
+  "typography": {
+    "heading_font": "sans-serif",
+    "body_font": "sans-serif",
+    "all_fonts": []
+  },
+  "business_type": "Fashion and Design",
+  "tone_of_voice": "The brand communicates with a warm and inviting tone, emphasizing creativity and personal expression. It encourages customers to embrace their unique style.",
+  "target_audience": "The target audience consists of young adults aged 18-35 who are fashion-forward and value individuality. They are likely to be trendsetters, interested in sustainable fashion, and enjoy DIY projects.",
+  "brand_values": [
+    "Creativity",
+    "Sustainability",
+    "Individuality",
+    "Quality craftsmanship",
+    "Community engagement"
+  ],
+  "style_notes": "The visual style features warm earthy tones with a rustic and artisanal aesthetic. Expect a cozy, inviting mood with a blend of modern and vintage elements.",
+  "content_suggestions": [
+    "DIY fashion tutorials showcasing how to personalize clothing items.",
+    "Behind-the-scenes content of the design process to highlight craftsmanship.",
+    "Customer spotlights featuring unique outfits styled with brand products.",
+    "Sustainable fashion tips that align with the brand's values.",
+    "Seasonal lookbooks that inspire customers to mix and match pieces."
+  ],
+  "character_anchor": "An ideal brand spokesperson is a young adult with an eclectic style, showcasing a mix of contemporary and vintage fashion. They have an approachable demeanor, with a creative flair, and are often seen in a relaxed, artistic environment, embodying the brand's values of individuality and creativity."
+}

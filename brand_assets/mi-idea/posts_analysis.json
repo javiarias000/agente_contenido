@@ -1,0 +1,164 @@
+{
+  "posts_analyzed": 10,
+  "average_quality": 0.0,
+  "content_types": {
+    "otro": 9,
+    "Producto": 1
+  },
+  "detailed_analyses": {
+    "102043131710591.jpg": {
+      "Contenido": "Un letrero de MDF cortado con láser que muestra 'Creative' y palabras relacionadas con diseño, marketing y publicidad.",
+      "Composición visual": "El letrero está centrado en la imagen. Los textos están grabados en el MDF, y el fondo es uniforme, lo que ayuda a que el producto destaque.",
+      "Colores usados": {
+        "Madera": "#D2B48C",
+        "Grabado": "#8B4513"
+      },
+      "Calidad": 7,
+      "Problemas de calidad": "La iluminación es adecuada, pero hay ligeras sombras que podrían reducirse. El enfoque es razonablemente bueno.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Media",
+      "Recomendaciones": "Mejorar la iluminación para reducir sombras. Considerar un fondo más neutro o profesional para resaltar el producto. Ajustar el enfoque para mejorar la nitidez."
+    },
+    "102043281710576.jpg": {
+      "Contenido": "El post muestra tres figuras de renos hechas de MDF, probablemente cortadas con láser. Están diseñadas con detalles simples y posiblemente usadas como adornos.",
+      "Composición visual": "Las figuras están alineadas en un ángulo diagonal desde izquierda a derecha, lo que crea una sensación de profundidad. Están centradas en la imagen con un fondo de tela neutro. Hay un balance simétrico en la distribución de las figuras.",
+      "Colores usados": {
+        "Marrón claro": "#D9B38C (aproximado)",
+        "Rosa": "#FF7070 (para la nariz)",
+        "Marrón oscuro": "#3B2D2A (para las bases)"
+      },
+      "Calidad": 7,
+      "Problemas de calidad": "La imagen está bien enfocada y razonablemente bien iluminada, aunque una luz más suave podría mejorar la presentación del producto.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Media, ya que muestra un producto interesante para la temporada navideña.",
+      "Recomendaciones": "Mejorar la iluminación, quizás un fondo más festivo para resaltar el tema navideño. Incluir contexto sobre el uso o las dimensiones podría aumentar el interés."
+    },
+    "102043311710573.jpg": {
+      "Contenido": "Muestra un diseño de reno personalizado en MDF con el nombre 'Bonny' grabado.",
+      "Composición visual": "El objeto de MDF está centrado en una base rectangular. Se encuentra frente a una tela de fondo neutral. El reno es el principal elemento visual.",
+      "Colores usados": {
+        "Principal": "#D9C2A5",
+        "Fondo": "#D3C8C3",
+        "Sombra": "#A69381"
+      },
+      "Calidad": 8,
+      "Problemas de calidad": "Podría mejorar el contraste con el fondo para resaltar mejor el objeto.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Media",
+      "Recomendaciones": "Considerar usar un fondo más contrastante para destacar mejor el objeto. Aumentar la luminosidad o ajustar el enfoque para mejorar la claridad de la imagen."
+    },
+    "102043785043859.png": {
+      "Contenido": "El post muestra un conjunto de tarjetas de presentación posiblemente hechas de MDF, exhibiendo un diseño cortado por láser con detalles florales. También se incluye el logo de la empresa Mi Idea.",
+      "Composición visual": "La imagen tiene una disposición en abanico de las tarjetas colocadas en el centro. El logo de la empresa está en la esquina superior derecha.",
+      "Colores usados": "Principalmente colores naturales del MDF y un logotipo que incluye tonos de naranja, blanco y negro.",
+      "Calidad": 8,
+      "Problemas de calidad": "La imagen está bien iluminada y enfocada, con una buena presentación de las tarjetas.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Media",
+      "Recomendaciones": "Para mejorar, se podrían incluir close-ups de los detalles cortados por láser o variaciones de diseño para destacar la personalización posible. También se podría mostrar el proceso de corte para atraer mayor interés."
+    },
+    "102043881710516.png": {
+      "contenido": "El post de la empresa Mi Idea muestra varios empaques de madera MDF decorativos, diseñados especialmente para botellas de vino y otros regalos pequeños. Los empaques tienen detalles festivos, como decoraciones navideñas láser y mensajes como 'Feliz Navidad'.",
+      "composicion_visual": "El layout está dividido en cinco secciones que muestran diferentes ángulos y detalles de los empaques. Los elementos principales son los empaques de madera con botellas de vino en su interior, decoraciones talladas y adornos navideños.",
+      "colores_usados": [
+        "#593C1F",
+        "#8C6B4F",
+        "#D58E56",
+        "#FF0000",
+        "#00FF00"
+      ],
+      "calidad": 8,
+      "problemas_de_calidad": "La imagen está bien iluminada y enfocada, sin embargo, la sobreimpresión de logos y textos podría ser algo distractor.",
+      "tipo_de_contenido": "Producto",
+      "engagement_potencial": "Alta",
+      "recomendaciones": "Podría mejorar evitar la sobrecarga de texto o marcas en las imágenes individuales para no distraer de los detalles del producto. También podría incluir tomas de contexto donde se vea el empaque en uso, o con decoraciones adicionales para inspiración."
+    },
+    "102044061710498.png": {
+      "Contenido": "La imagen muestra un producto de la empresa Mi Idea: un estuche de madera para botellas con un mensaje grabado a láser y una botella de vino al lado.",
+      "Composición visual": "La imagen tiene un layout simple. El estuche de madera está a la izquierda, y la botella de vino a la derecha. El logo de la empresa se encuentra en la parte superior derecha.",
+      "Colores usados": {
+        "Madera": "#F5DEB3",
+        "Vino": "#2E0E16",
+        "Fondo": "#FFFFFF",
+        "Texto": "#000000"
+      },
+      "Calidad": 8,
+      "Problemas de calidad": "La imagen es clara, bien iluminada y enfocada, no hay problemas significativos.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Media",
+      "Recomendaciones": "Para mejorar, se podría añadir más contexto sobre la personalización del producto o incluir imágenes del producto en uso. También podría explorar diferentes ángulos o detalles del grabado."
+    },
+    "102044078377163.png": {
+      "Contenido": "La imagen muestra un diseño de corte láser en MDF con los textos 'trotec' y 'Happy Holidays!'.",
+      "Composición visual": "La imagen tiene un enfoque en primer plano de las piezas cortadas, destacando los textos grabados. El logo de la empresa está presente en la esquina superior derecha.",
+      "Colores usados": {
+        "Madera": "#D2B48C",
+        "Texto": "#FFFFFF",
+        "Fondo": "#FFFFFF"
+      },
+      "Calidad": 8,
+      "Problemas de calidad": "La imagen es clara y bien iluminada, sin problemas evidentes de enfoque o iluminación.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Media",
+      "Recomendaciones": "Para mejorar esta imagen, se podrían incluir más detalles del proceso de creación o más ejemplos del producto en diferentes contextos para aumentar el interés y el compromiso."
+    },
+    "240013697913533.jpg": {
+      "Contenido": "El post muestra un topper decorativo para el Día de la Madre. Se observa un diseño con flores rojas, hojas verdes y la palabra 'Mãe' en el centro, hecha de un material que parece brillante, además de un corazón rojo.",
+      "Composición visual": {
+        "Layout": "La imagen tiene un diseño circular con el topper al centro. Hay texto en la parte superior y una etiqueta de precio en la esquina inferior izquierda.",
+        "Elementos principales": [
+          "Topper decorativo",
+          "Texto 'Feliz día Mamá'",
+          "Texto 'Nueva temporada de creatividad Sale'",
+          "Logo de la empresa"
+        ],
+        "Balance": "Equilibrado, con el producto en el centro rodeado de elementos de diseño y texto en los márgenes."
+      },
+      "Colores usados": {
+        "Fondo": "#F5AABA",
+        "Texto": "#FFFFFF",
+        "Elementos": [
+          "#FF0000",
+          "#008000",
+          "#FFD700"
+        ]
+      },
+      "Calidad": 9,
+      "Problemas de calidad": "Ninguno aparente. La imagen está bien iluminada y enfocada.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Alta",
+      "Recomendaciones": "Mantener la claridad del diseño y proporcionar información contactable o de compra más prominente para facilitar las conversiones."
+    },
+    "240013701246866.jpg": {
+      "Contenido": "El post muestra un arreglo floral con rosas rojas en un soporte de diseño elaborado en MDF con corte láser.",
+      "Composición visual": "La imagen tiene un layout atractivo. El arreglo floral es el elemento central dentro de un círculo en el lado izquierdo. El precio, el logotipo y la descripción están bien distribuidos alrededor. El balance entre texto e imagen está logrado.",
+      "Colores usados": {
+        "Principal": "#F1A7A7",
+        "Secundario": "#D93131",
+        "Texto": "#4F4F4F"
+      },
+      "Calidad": 8,
+      "Problemas de calidad": "La imagen es de buena calidad, clara y bien iluminada. No presenta problemas significativos.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Alta",
+      "Recomendaciones": "Considerar incluir un breve texto que explique el uso o el contexto del producto para aumentar el atractivo emocional. Se podría experimentar con diferentes ángulos de presentación del producto."
+    },
+    "240013714580198.jpg": {
+      "Contenido": "El post muestra un porta retratos con el texto 'Mamá', diseñado en corte láser.",
+      "Composición visual": "El layout es circular, destacando el producto en el centro rodeado de elementos decorativos. Incluye texto en la parte superior e inferior, y un precio destacado en la esquina inferior izquierda.",
+      "Colores usados": {
+        "Fondo": "#F2A8B3",
+        "Texto": "#FFFFFF",
+        "Precio": "#E94E77"
+      },
+      "Calidad": 8,
+      "Problemas de calidad": "La imagen es clara y bien iluminada sin problemas evidentes.",
+      "Tipo de contenido": "Producto",
+      "Engagement potencial": "Alta",
+      "Recomendaciones": [
+        "Agregar más información sobre materiales y beneficios del producto.",
+        "Incluir un llamado a la acción más visible para incentivar la compra."
+      ]
+    }
+  }
+}

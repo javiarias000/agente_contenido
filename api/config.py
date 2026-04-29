@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     reddit_client_secret: str = ""
     reddit_user_agent: str = "agente_contenido/1.0"
 
+    # Facebook Graph API (optional)
+    facebook_access_token: str = ""
+    facebook_page_id: str = ""
+
     # Storage
     database_url: str = "sqlite+aiosqlite:///./agente_contenido.db"
     outputs_dir: str = "./outputs"

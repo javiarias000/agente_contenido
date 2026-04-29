@@ -99,6 +99,16 @@ class ScriptGenerator(BaseSkill):
         template.validate_inputs({**inputs, "competitor_name": competitor_name})
 
         platform_info = PLATFORM_CONSTRAINTS.get(platform, PLATFORM_CONSTRAINTS["tiktok"])
+
+        # Extract brand colors for visual consistency
+        brand_colors = profile.get("colors", {})
+        color_palette = brand_colors.get("palette", []) or [
+            brand_colors.get("primary", ""),
+            brand_colors.get("secondary", ""),
+            brand_colors.get("tertiary", "")
+        ]
+        color_palette = [c for c in color_palette if c]
+
         ctx = TemplateContext(
             brand_name=profile.get("name", brand_slug),
             tone_of_voice=profile.get("tone_of_voice", "friendly and engaging"),
@@ -108,6 +118,11 @@ class ScriptGenerator(BaseSkill):
             platform=platform,
             target_duration=target_duration,
         )
+
+        # Store brand colors for later use in image generation
+        ctx.brand_colors = color_palette
+        ctx.brand_color_mood = brand_colors.get("mood", "")
+        ctx.posts_insights = profile.get("posts_insights", {})
 
         await self.emit("step_start", f"Generando guión para {brand_slug} — ángulo: {angle_type}")
 
@@ -175,6 +190,12 @@ class ScriptGenerator(BaseSkill):
             "max_duration_seconds": ctx.target_duration,
             "brand_values": ctx.brand_values,
         }
+
+        # Add brand colors for visual consistency
+        if hasattr(ctx, 'brand_colors') and ctx.brand_colors:
+            user_content["brand_colors"] = ctx.brand_colors
+            user_content["color_mood"] = getattr(ctx, 'brand_color_mood', '')
+
         if custom_hook:
             user_content["use_this_hook"] = custom_hook
         if competitor_name:

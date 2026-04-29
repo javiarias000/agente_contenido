@@ -18,6 +18,8 @@ async def fetch_html(url: str, timeout: float = 30.0) -> tuple[str, str]:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
         "Accept-Encoding": "gzip, deflate",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
         "DNT": "1",
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
@@ -30,6 +32,17 @@ async def fetch_html(url: str, timeout: float = 30.0) -> tuple[str, str]:
         resp = await client.get(url, headers=headers)
         resp.raise_for_status()
         return resp.text, str(resp.url)
+
+
+def extract_og_tags(soup: BeautifulSoup) -> dict[str, str]:
+    """Extract Open Graph meta tags (useful for social media profiles)."""
+    og_data = {}
+    for meta in soup.find_all("meta", property=re.compile(r"^og:")):
+        prop = meta.get("property", "").replace("og:", "")
+        content = meta.get("content", "")
+        if content and prop not in og_data:
+            og_data[prop] = content
+    return og_data
 
 
 def extract_logo_urls(soup: BeautifulSoup, base_url: str) -> list[str]:
