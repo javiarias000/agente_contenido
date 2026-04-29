@@ -23,13 +23,14 @@ def _sec_to_srt(seconds: float) -> str:
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
-def _write_srt_safe(words: list[dict], path: str, min_duration: float = 0.5) -> bool:
+def _write_srt_safe(words: list[dict], path: str, min_duration: float = 0.5, max_duration: float = 3600.0) -> bool:
     """Write SRT file with validation.
 
     Args:
         words: List of {"word": str, "start": float, "end": float}
         path: Output SRT file path
         min_duration: Minimum duration for a subtitle block (seconds)
+        max_duration: Maximum allowed duration (clamps SRT to valid range)
 
     Returns:
         True if successful, False if validation failed
@@ -41,8 +42,9 @@ def _write_srt_safe(words: list[dict], path: str, min_duration: float = 0.5) -> 
         with open(path, "w", encoding="utf-8") as f:
             chunk_size = 8
             chunks = [words[i : i + chunk_size] for i in range(0, len(words), chunk_size)]
+            written_count = 0
 
-            for idx, chunk in enumerate(chunks, 1):
+            for chunk in chunks:
                 start = chunk[0].get("start", 0.0)
                 end = chunk[-1].get("end", start + min_duration)
 
@@ -50,12 +52,19 @@ def _write_srt_safe(words: list[dict], path: str, min_duration: float = 0.5) -> 
                 if end - start < min_duration:
                     end = start + min_duration
 
+                # Clamp to max_duration to prevent out-of-range SRT
+                if start >= max_duration:
+                    break
+                if end > max_duration:
+                    end = max_duration
+
                 text = " ".join(w.get("word", "") for w in chunk).strip()
 
                 if not text:
                     continue
 
-                f.write(f"{idx}\n")
+                written_count += 1
+                f.write(f"{written_count}\n")
                 f.write(f"{_sec_to_srt(start)} --> {_sec_to_srt(end)}\n")
                 f.write(f"{text}\n\n")
 
@@ -164,12 +173,23 @@ class AdvancedSubtitleGenerator(BaseSkill):
                     outputs={"srt_path": "", "srt_valid": False}
                 )
 
-            # Write SRT file
+            # Write SRT file with audio duration limit
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                     "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
+                    capture_output=True, text=True, timeout=10,
+                )
+                max_audio_duration = float(result.stdout.strip()) if result.stdout else 3600.0
+            except Exception:
+                max_audio_duration = 3600.0
+
             srt_dir = os.path.join(settings.outputs_dir, "video")
             os.makedirs(srt_dir, exist_ok=True)
             srt_path = os.path.join(srt_dir, f"{self.run_id}.srt")
 
-            success = _write_srt_safe(words, srt_path)
+            success = _write_srt_safe(words, srt_path, max_duration=max_audio_duration)
 
             if success:
                 size = os.path.getsize(srt_path)

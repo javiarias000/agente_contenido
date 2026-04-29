@@ -163,7 +163,11 @@ class ComposedVideoAssembler(BaseSkill):
             if not img_path or not os.path.exists(img_path):
                 continue
 
-            duration = _get_audio_duration(audio_path) if os.path.exists(audio_path) else 3.0
+            if not audio_path or not os.path.exists(audio_path):
+                await self.emit("progress", f"⚠️ Scene {i+1}: No audio found, using 3s default")
+                duration = 3.0
+            else:
+                duration = _get_audio_duration(audio_path)
 
             # Get motion info if available
             motion = None
@@ -231,11 +235,13 @@ class ComposedVideoAssembler(BaseSkill):
         elif motion_type == "pan_left":
             # Crop right side and pad left
             crop_w = int(OUTPUT_WIDTH * 0.95)
-            return f"crop={crop_w}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0"
+            offset = int(OUTPUT_WIDTH * 0.05)
+            return f"crop={crop_w}:{OUTPUT_HEIGHT}:{offset}:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{offset}:0"
         elif motion_type == "pan_right":
             # Crop left side and pad right
             crop_w = int(OUTPUT_WIDTH * 0.95)
-            return f"crop={crop_w}:{OUTPUT_HEIGHT}:0:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{OUTPUT_WIDTH*0.05}:0"
+            offset = int(OUTPUT_WIDTH * 0.05)
+            return f"crop={crop_w}:{OUTPUT_HEIGHT}:0:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{offset}:0"
         else:
             return ""
 

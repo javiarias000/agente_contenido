@@ -140,6 +140,9 @@ class ImageGenerator(BaseSkill):
             await self._download_image(img_data.url, save_path)
         else:
             raise ValueError("OpenAI image response has neither b64_json nor url")
+
+        if not os.path.exists(save_path) or os.path.getsize(save_path) == 0:
+            raise ValueError(f"Image save failed or file is empty: {save_path}")
         return save_path
 
     async def _generate_all(

@@ -82,7 +82,11 @@ class VoiceGenerator(BaseSkill):
             await self._synthesize_elevenlabs(text, voice_id, output_path)
         except Exception as e:
             await self.emit("log", f"ElevenLabs falló ({e}), usando OpenAI TTS...")
-            await self._synthesize_openai(text, output_path)
+            try:
+                await self._synthesize_openai(text, output_path)
+            except Exception as e2:
+                await self.emit("progress", f"❌ Ambos TTS fallaron: {e2}")
+                raise
 
     async def _synthesize_elevenlabs(self, text: str, voice_id: str, output_path: str) -> None:
         with open(output_path, "wb") as f:
