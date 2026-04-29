@@ -140,6 +140,10 @@ class Assembler(BaseSkill):
             )
             cmd = [
                 "ffmpeg", "-y", "-loop", "1", "-i", img,
+            ]
+            if audio and os.path.exists(audio):
+                cmd += ["-i", audio]
+            cmd += [
                 "-t", str(duration),
                 "-vf", vf,
                 "-r", str(OUTPUT_FPS),
@@ -147,7 +151,7 @@ class Assembler(BaseSkill):
                 "-c:v", "libx264", "-preset", "fast",
             ]
             if audio and os.path.exists(audio):
-                cmd += ["-i", audio, "-c:a", "aac", "-shortest"]
+                cmd += ["-c:a", "aac", "-shortest"]
             cmd.append(out_path)
             result = subprocess.run(cmd, capture_output=True, timeout=120)
             if result.returncode == 0 and os.path.exists(out_path):

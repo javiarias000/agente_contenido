@@ -47,6 +47,14 @@ async def test_image_generation():
 
         print("✅ Image generated successfully!\n")
 
+        # Debug response
+        print(f"Response type: {type(response)}")
+        print(f"Response data: {response.data}")
+
+        if not response.data or not response.data[0]:
+            print("❌ No image data in response")
+            return None
+
         # Get image URL and download it
         image_url = response.data[0].url
         print(f"📍 Image URL: {image_url[:80]}...\n")
