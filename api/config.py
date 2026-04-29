@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # OpenAI model names
     text_model: str = "gpt-4o-mini"
-    image_model: str = "dall-e-3"
+    image_model: str = "gpt-image-1.5"
     whisper_model: str = "whisper-1"
 
 
