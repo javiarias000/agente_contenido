@@ -1,0 +1,210 @@
+================================================================================
+ANÁLISIS DE ARQUITECTURA - MOTOR DE CONTENIDO AGÉNTICO
+================================================================================
+
+FECHA: 2025-04-29
+VERSIÓN: 1.0
+DOCUMENTOS GENERADOS: 4
+
+================================================================================
+1. HALLAZGOS PRINCIPALES
+================================================================================
+
+PROBLEMA A: Logo sale del frame (SEVERIDAD: ALTA)
+┌─────────────────────────────────────────────────────────────────┐
+│ Ubicación: skills/assembler.py línea 137-140                    │
+│ Causa: ffmpeg scale=decrease + pad sin considerar logo          │
+│ Impacto: Videos descentrados, marca débil                       │
+│ Solución: Safe area overlay + reposicionamiento dinámico        │
+└─────────────────────────────────────────────────────────────────┘
+
+PROBLEMA B: Subtítulos desaparecen (SEVERIDAD: ALTA)
+┌─────────────────────────────────────────────────────────────────┐
+│ Ubicación: skills/assembler.py línea 192-210                    │
+│ Causa: Multiple: Whisper sin word-level timestamps,             │
+│        path escaping incorrecto, silent fallback sin logging     │
+│ Impacto: Video sin subtítulos, usuario no sabe por qué          │
+│ Solución: Validación robusta + AdvancedSubtitleGenerator        │
+└─────────────────────────────────────────────────────────────────┘
+
+PROBLEMA C: Sin transiciones (SEVERIDAD: MEDIA)
+┌─────────────────────────────────────────────────────────────────┐
+│ Ubicación: skills/assembler.py línea 161-171                    │
+│ Causa: ffmpeg concat demuxer (corte seco)                       │
+│ Impacto: Transiciones abruptas entre escenas                    │
+│ Solución: xfade filter con 200ms fade entre clips               │
+└─────────────────────────────────────────────────────────────────┘
+
+PROBLEMA D: VideoAnimator superficial (SEVERIDAD: BAJA)
+┌─────────────────────────────────────────────────────────────────┐
+│ Ubicación: skills/video_animator.py línea 155-197               │
+│ Causa: Filtros ffmpeg estáticos (no keyframes), Google Veo      │
+│        API no usada, post-processing del video completo         │
+│ Impacto: Animación genérica y cara (re-encode)                  │
+│ Solución: Integrar en Assembler con zoompan + keyframes         │
+└─────────────────────────────────────────────────────────────────┘
+
+PROBLEMA E: Contexto sin validación (SEVERIDAD: BAJA)
+┌─────────────────────────────────────────────────────────────────┐
+│ Ubicación: pipelines/base_pipeline.py línea 67                  │
+│ Causa: No validación de outputs antes de mergear en contexto    │
+│ Impacto: Silent failures si un step genera outputs inválidos    │
+│ Solución: Type checking y validación en base_pipeline           │
+└─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. ARQUITECTURA PROPUESTA
+================================================================================
+
+COMPONENTES NUEVOS:
+
+1. AnimatedImageGenerator (skills/animated_image_generator.py)
+   ├─ Extiende ImageGenerator
+   ├─ Extrae motion_hint del visual_description
+   ├─ Guarda motion.json con metadatos de animación
+   └─ Outputs: image_paths[], motion_metadata[]
+
+2. AdvancedSubtitleGenerator (skills/advanced_subtitle_generator.py)
+   ├─ Transcribe con Whisper (con validación)
+   ├─ Fallback a script si Whisper falla
+   ├─ Valida timings (no gaps, no overlaps)
+   └─ Outputs: srt_path, srt_metadata
+
+3. ComposedVideoAssembler (skills/composed_video_assembler.py)
+   ├─ Reemplaza Assembler
+   ├─ Compone escenas con:
+   │  ├─ Imagen de fondo
+   │  ├─ Animación con zoompan + keyframes
+   │  ├─ Logo con safe area
+   │  ├─ On-screen text overlay
+   │  └─ Audio sincronizado (44100 Hz stereo)
+   ├─ Concatena con transiciones (xfade)
+   ├─ Quema subtítulos con validación
+   └─ Outputs: final_video_path, srt_path
+
+CAMBIOS EN EXISTENTES:
+
+1. ugc_pipeline.py (línea 84-119)
+   ├─ ImageGenerator → AnimatedImageGenerator
+   ├─ Assembler → ComposedVideoAssembler
+   └─ REMOVER: VideoAnimator (integrado en Assembler)
+
+2. script_generator.py (línea 46-54)
+   └─ Agregar motion_hint al prompt
+
+3. video_animator.py
+   └─ Deprecate (funcionalidad movida a ComposedVideoAssembler)
+
+================================================================================
+3. BENEFICIOS DE LA NUEVA ARQUITECTURA
+================================================================================
+
+✓ Logo siempre en frame con safe area (5% margin)
+✓ Subtítulos robustos con validación y logging
+✓ Transiciones suaves entre escenas (fade 200ms)
+✓ Animación por escena, no post-processing
+✓ Composición visual centralizada (overlays, texto, etc)
+✓ Audio siempre 44100 Hz stereo
+✓ Manejo de errores mejorado (no silent failures)
+✓ Performance: menos re-encoding (animación integrada)
+
+================================================================================
+4. ARCHIVOS GENERADOS
+================================================================================
+
+DOCUMENTACIÓN CREADA:
+
+1. ARQUITECTURA.md (500+ líneas)
+   └─ Análisis completo, flujos, diagrama, problemas con líneas exactas
+
+2. IMPLEMENTACION_DETALLADA.md (400+ líneas)
+   └─ Código skeleton y pseudocódigo de nuevos skills
+
+3. ANALISIS_PROBLEMAS.md (600+ líneas)
+   └─ Análisis técnico profundo de cada problema, cascadas de fallos
+
+4. REFERENCIA_LINEAS.md (300+ líneas)
+   └─ Matriz rápida de ubicaciones, línea-por-línea
+
+ESTOS DOCUMENTOS ESTÁN EN: /home/ubuntu/agente_contenido/
+
+================================================================================
+5. ESTIMACIÓN DE ESFUERZO
+================================================================================
+
+Tarea                              Horas   Riesgo
+──────────────────────────────────────────────────
+AnimatedImageGenerator              4      BAJO
+AdvancedSubtitleGenerator           6      MEDIO
+ComposedVideoAssembler             12      ALTO
+Integración en ugc_pipeline         2      BAJO
+Testing completo                    8      MEDIO
+──────────────────────────────────────────────────
+TOTAL                              32      -
+
+Timeline: ~1 semana (6-8 horas/día)
+
+Riesgo principal: ffmpeg complex filtergraph (composición con múltiples inputs)
+
+================================================================================
+6. PRÓXIMOS PASOS
+================================================================================
+
+FASE 1: Fundamentos (Semana 1)
+┌─────────────────────────────────────────────────────────────────┐
+│ ✓ Crear AnimatedImageGenerator (hereda de ImageGenerator)       │
+│ ✓ Crear AdvancedSubtitleGenerator (mejorada)                    │
+│ ✓ Tests unitarios para ambos                                    │
+│ ✓ Validar motion_hint extraction                                │
+│ ✓ Validar SRT generation                                        │
+└─────────────────────────────────────────────────────────────────┘
+
+FASE 2: ComposedVideoAssembler (Semana 2)
+┌─────────────────────────────────────────────────────────────────┐
+│ ✓ Crear ComposedVideoAssembler (core nuevo)                     │
+│ ✓ Implementar _compose_scene_videos() con ffmpeg complex        │
+│ ✓ Implementar _concatenate_with_transitions()                   │
+│ ✓ Integración con AdvancedSubtitleGenerator                     │
+│ ✓ Test end-to-end con pipeline UGC                              │
+└─────────────────────────────────────────────────────────────────┘
+
+FASE 3: Validación (Semana 3)
+┌─────────────────────────────────────────────────────────────────┐
+│ ✓ Testing comparativo (antes/después)                           │
+│ ✓ Validación de todos los outputs                               │
+│ ✓ Deprecation warnings en Assembler y VideoAnimator             │
+│ ✓ Actualizar CLAUDE.md con nuevos skills                        │
+└─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. PREGUNTAS PARA EL EQUIPO
+================================================================================
+
+Q1: ¿Mantener Assembler como deprecated o remover inmediatamente?
+    → Recomendación: Mantener como deprecated (1-2 versiones)
+
+Q2: ¿Agregar lip-sync en ComposedVideoAssembler o paso separado?
+    → Recomendación: Paso separado (lip_sync.py después de video_assemble)
+
+Q3: ¿Usar ffmpeg complex filtergraph o simpler con múltiples calls?
+    → Recomendación: Complex filtergraph (más eficiente, 1 pass)
+
+Q4: ¿Dónde almacenar motion.json (junto a PNG o en metadata DB)?
+    → Recomendación: Junto a PNG (más portable, no depende de DB)
+
+================================================================================
+8. REFERENCIAS RÁPIDAS
+================================================================================
+
+Documentación en: /home/ubuntu/agente_contenido/
+
+Lee en este orden:
+1. RESUMEN_EJECUTIVO.txt (este archivo) ← START HERE
+2. ANALISIS_PROBLEMAS.md ← Entiende qué está roto
+3. ARQUITECTURA.md ← Solución propuesta
+4. IMPLEMENTACION_DETALLADA.md ← Cómo implementar
+5. REFERENCIA_LINEAS.md ← Ubicaciones exactas en código
+
+================================================================================
+END OF SUMMARY
+================================================================================

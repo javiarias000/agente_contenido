@@ -11,10 +11,10 @@ from api.events import EventBus
 from pipelines.base_pipeline import BasePipeline, StepDefinition
 from skills.brand_analyzer import BrandAnalyzer
 from skills.script_generator import ScriptGenerator
-from skills.image_generator import ImageGenerator
+from skills.animated_image_generator import AnimatedImageGenerator
 from skills.voice_generator import VoiceGenerator
-from skills.assembler import Assembler
-from skills.video_animator import VideoAnimator
+from skills.advanced_subtitle_generator import AdvancedSubtitleGenerator
+from skills.composed_video_assembler import ComposedVideoAssembler
 from skills.image_quality_improver import ImageQualityImprover
 
 
@@ -93,7 +93,7 @@ class UGCPipeline(BasePipeline):
             ),
             StepDefinition(
                 name="image_generate",
-                skill_class=ImageGenerator,
+                skill_class=AnimatedImageGenerator,
                 skill_kwargs={},
             ),
             StepDefinition(
@@ -107,13 +107,13 @@ class UGCPipeline(BasePipeline):
                 skill_kwargs={},
             ),
             StepDefinition(
-                name="video_assemble",
-                skill_class=Assembler,
+                name="subtitle_generate",
+                skill_class=AdvancedSubtitleGenerator,
                 skill_kwargs={},
             ),
             StepDefinition(
-                name="video_animate",
-                skill_class=VideoAnimator,
+                name="video_assemble",
+                skill_class=ComposedVideoAssembler,
                 skill_kwargs={},
             ),
         ]
