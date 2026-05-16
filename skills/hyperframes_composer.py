@@ -116,31 +116,8 @@ tl.to("#fade-N", {opacity:1, duration:0.3, ease:"power2.inOut"}, sceneNEnd - 0.4
 tl.to("#fade-N", {opacity:0, duration:0.3, ease:"power2.inOut"}, sceneNEnd + 0.1);
 ```
 
-## CAPTIONS (you will receive pre-computed groups)
-Caption groups are positioned OUTSIDE clips, as siblings within the composition:
-```html
-<!-- All captions start hidden, timeline controls visibility -->
-<div id="cg-0" style="position:absolute;bottom:380px;left:0;right:0;text-align:center;opacity:0;visibility:hidden;z-index:100">
-  <div class="cap-text">Word1 Word2 Word3</div>
-</div>
-```
-Caption font: 68–80px, font-weight 800, color white, text-shadow for legibility.
-For each group (gi = group index, group.start/end in seconds):
-```js
-tl.set("#cg-"+gi, {opacity:1, visibility:"visible"}, group.start);
-tl.from("#cg-"+gi, {scale:0.85, opacity:0, duration:0.12, ease:"back.out(1.7)"}, group.start);
-tl.to("#cg-"+gi, {opacity:0, scale:0.95, duration:0.12, ease:"power2.in"}, group.end - 0.12);
-tl.set("#cg-"+gi, {opacity:0, visibility:"hidden"}, group.end);
-```
-One accent-colored span for each individual word within the group:
-```html
-<div class="cap-text"><span class="cw" id="cw-0-0">Word1</span> <span class="cw" id="cw-0-1">Word2</span></div>
-```
-```js
-// Highlight each word at its timestamp:
-tl.to("#cw-0-0", {color:"VAR_ACCENT", scale:1.08, duration:0.08, ease:"power3.out"}, word.start);
-tl.to("#cw-0-0", {color:"#ffffff", scale:1, duration:0.08, ease:"power2.in"}, word.end);
-```
+## CAPTIONS
+Do NOT add any caption or subtitle elements. Captions are injected programmatically after your HTML is generated — leave no placeholder for them.
 
 ## VISUAL QUALITY
 - Three layers minimum per scene: background treatment, foreground content, accent elements
@@ -203,8 +180,75 @@ def _group_words(words: list[dict], max_per_group: int = 4) -> list[dict]:
     return groups
 
 
+def _inject_captions(html: str, caption_groups: list[dict], accent: str) -> str:
+    """Inject karaoke-style captions into the composition after LLM generation.
+
+    Each group fades in as a unit; each individual word lights up with the accent
+    color at its exact Whisper timestamp, then returns to white — deterministic
+    and independent of what the LLM produced.
+    """
+    if not caption_groups:
+        return html
+
+    # ── CSS (injected once) ──────────────────────────────────────────────────
+    cap_css = (
+        "<style>"
+        ".hf-cg{position:absolute;bottom:300px;left:0;right:0;text-align:center;"
+        "opacity:0;visibility:hidden;z-index:100;padding:0 64px;pointer-events:none}"
+        ".hf-ct{font-size:60px;font-weight:800;color:#fff;line-height:1.3;"
+        "text-shadow:0 2px 28px rgba(0,0,0,.95),0 0 56px rgba(0,0,0,.7)}"
+        ".hf-cw{display:inline;transition:none}"
+        "</style>\n"
+    )
+
+    # ── Caption divs (one per group, words as spans) ─────────────────────────
+    divs = ""
+    for g in caption_groups:
+        words_html = " ".join(
+            f'<span id="{w["id"]}" class="hf-cw">{w["word"]}</span>'
+            for w in g["words"]
+        )
+        divs += (
+            f'<div id="{g["id"]}" class="hf-cg">'
+            f'<div class="hf-ct">{words_html}</div>'
+            f'</div>\n'
+        )
+
+    # ── GSAP tweens appended to the existing root timeline ───────────────────
+    js_lines = ["var _ctl=window.__timelines['root'];"]
+    for g in caption_groups:
+        gi = g["id"]
+        gs = round(g["start"], 3)
+        ge = round(g["end"], 3)
+        # group in
+        js_lines.append(f"_ctl.set('#{gi}',{{visibility:'visible'}},{gs});")
+        js_lines.append(f"_ctl.fromTo('#{gi}',{{opacity:0,scale:.88}},{{opacity:1,scale:1,duration:.12,ease:'back.out(1.7)'}},{gs});")
+        # per-word karaoke highlight
+        for w in g["words"]:
+            wi = w["id"]
+            ws = round(w["start"], 3)
+            we = round(w["end"], 3)
+            js_lines.append(f"_ctl.to('#{wi}',{{color:'{accent}',scale:1.08,duration:.06,ease:'power3.out'}},{ws});")
+            js_lines.append(f"_ctl.to('#{wi}',{{color:'#ffffff',scale:1,duration:.08,ease:'power2.in'}},{we});")
+        # group out
+        out_t = round(ge - 0.10, 3)
+        js_lines.append(f"_ctl.to('#{gi}',{{opacity:0,scale:.94,duration:.10,ease:'power2.in'}},{out_t});")
+        js_lines.append(f"_ctl.set('#{gi}',{{visibility:'hidden'}},{ge});")
+
+    cap_script = "<script>\n" + "\n".join(js_lines) + "\n</script>\n"
+
+    # ── Inject before </body> ────────────────────────────────────────────────
+    inject = cap_css + divs + cap_script
+    if "</body>" in html:
+        html = html.replace("</body>", inject + "</body>", 1)
+    else:
+        html += inject
+    return html
+
+
 class HyperFramesComposer(BaseSkill):
-    """Uses GPT-4o to generate a brand-aware HyperFrames HTML composition with animated captions."""
+    """Uses gpt-4.1-mini to generate a brand-aware HyperFrames HTML composition.
+    Karaoke-style captions are injected deterministically in Python after LLM generation."""
     skill_name = "hyperframes_composer"
 
     def __init__(self, event_bus: EventBus, run_id: str, step_index: int = 0):
@@ -249,7 +293,7 @@ class HyperFramesComposer(BaseSkill):
 
         await self.emit("progress", f"Composición: {len(timed_scenes)} escenas, {len(caption_groups)} grupos de subtítulos, {total_duration:.1f}s")
 
-        # Build user message
+        # Build user message — captions excluded; injected by Python after LLM
         user_data = {
             "brand": {
                 "name": profile.get("name", profile.get("slug", "Brand")),
@@ -261,7 +305,6 @@ class HyperFramesComposer(BaseSkill):
             "visual_style": style["desc"],
             "total_duration": total_duration,
             "scenes": timed_scenes,
-            "caption_groups": caption_groups,
         }
 
         system = COMPOSER_SYSTEM.replace("{W}", str(width)).replace("{H}", str(height))
@@ -270,10 +313,10 @@ class HyperFramesComposer(BaseSkill):
             + json.dumps(user_data, ensure_ascii=False, indent=2)
         )
 
-        await self.emit("progress", "Llamando a GPT-4o para generar HTML...")
+        await self.emit("progress", "Llamando a gpt-4.1-mini para generar HTML...")
 
         resp = await self.client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user_msg},
@@ -289,7 +332,10 @@ class HyperFramesComposer(BaseSkill):
             html = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
 
         if not html.strip().startswith("<"):
-            raise ValueError("GPT-4o did not return valid HTML. Output starts with: " + html[:80])
+            raise ValueError("gpt-4.1-mini did not return valid HTML. Output starts with: " + html[:80])
+
+        # Inject karaoke captions deterministically (word-level timestamps from Whisper)
+        html = _inject_captions(html, caption_groups, accent)
 
         # Save to outputs/compositions/{run_id}/
         comp_dir = os.path.join(settings.outputs_dir, "compositions", self.run_id)
