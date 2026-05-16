@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 class PipelineRunRequest(BaseModel):
-    pipeline_type: Literal["ugc", "avatar_reel", "static_ads", "carousel"] = "ugc"
+    pipeline_type: Literal["ugc", "avatar_reel", "static_ads", "carousel", "hyperframes"] = "ugc"
     brand_slug: str
     mode: Literal["interactive", "headless"] = "interactive"
     platform: Literal["tiktok", "instagram_reel", "youtube_short"] = "tiktok"
@@ -38,6 +38,8 @@ class PipelineRunRequest(BaseModel):
     topic: str | None = None
     num_slides: int = 6
     render_method: Literal["html", "image"] = "image"
+    # HyperFrames
+    visual_style: str = "swiss_pulse"
 
 
 class FeedbackRequest(BaseModel):
@@ -81,6 +83,9 @@ async def run_pipeline(
             elif body.pipeline_type == "carousel":
                 from pipelines.carousel_pipeline import CarouselPipeline
                 pipeline = CarouselPipeline(event_bus=event_bus, run_id=run_id, db_session=db)
+            elif body.pipeline_type == "hyperframes":
+                from pipelines.hyperframes_pipeline import HyperFramesPipeline
+                pipeline = HyperFramesPipeline(event_bus=event_bus, run_id=run_id, db_session=db)
             else:
                 return
             await pipeline.execute(body.model_dump(), interactive=interactive)

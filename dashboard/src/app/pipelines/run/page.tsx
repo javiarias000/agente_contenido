@@ -26,6 +26,7 @@ function RunPipelineForm() {
     topic: "",
     num_slides: 6,
     news_url: "",
+    visual_style: "swiss_pulse",
   });
   const [loading, setLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -108,6 +109,7 @@ function RunPipelineForm() {
           <label className="text-sm font-medium block mb-1">Tipo de Pipeline</label>
           <select value={form.pipeline_type} onChange={update("pipeline_type")} className="w-full border rounded-lg px-3 py-2 text-sm">
             <option value="ugc">UGC Pipeline</option>
+            <option value="hyperframes">HyperFrames Video</option>
             <option value="static_ads">Static Ads</option>
             <option value="avatar_reel">Avatar Reel</option>
             <option value="carousel">Carousel</option>
@@ -197,6 +199,51 @@ function RunPipelineForm() {
                 <input type="url" value={form.news_url} onChange={update("news_url")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: https://example.com/news" />
               </div>
             )}
+          </>
+        )}
+
+        {form.pipeline_type === "hyperframes" && (
+          <>
+            <div>
+              <label className="text-sm font-medium block mb-1">Plataforma</label>
+              <select value={form.platform} onChange={update("platform")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="tiktok">TikTok (9:16)</option>
+                <option value="instagram_reel">Instagram Reel (9:16)</option>
+                <option value="youtube_short">YouTube Short (9:16)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Ángulo de contenido</label>
+              <select value={form.angle_type} onChange={update("angle_type")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="sales">Ventas / UGC</option>
+                <option value="educational">Educativo</option>
+                <option value="competitor">Comparación con competidor</option>
+                <option value="trending">Tendencia / Noticia</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Estilo visual</label>
+              <select value={form.visual_style} onChange={update("visual_style")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="swiss_pulse">Swiss Pulse — limpio, SaaS, tech</option>
+                <option value="maximalist_type">Maximalist Type — potente, kinético, redes</option>
+                <option value="data_drift">Data Drift — futurista, IA/ML, neon</option>
+                <option value="soft_signal">Soft Signal — íntimo, wellness, lifestyle</option>
+                <option value="velvet_standard">Velvet Standard — premium, lujo, atemporal</option>
+                <option value="shadow_cut">Shadow Cut — oscuro, cinemático, editorial</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Duración objetivo (seg)</label>
+              <input type="number" value={form.target_duration} onChange={update("target_duration")} min={15} max={90} className="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Hook personalizado (opcional)</label>
+              <input type="text" value={form.custom_hook} onChange={update("custom_hook")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: ¿Sabías que...?" />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">ID de voz (opcional)</label>
+              <input type="text" value={form.voice_id} onChange={update("voice_id")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: rachel" />
+            </div>
           </>
         )}
 
