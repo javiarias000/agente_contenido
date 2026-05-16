@@ -27,6 +27,10 @@ function RunPipelineForm() {
     num_slides: 6,
     news_url: "",
     visual_style: "swiss_pulse",
+    transition_style: "crossfade",
+    motion_intensity: "medium",
+    text_animation: "slide",
+    creative_brief: "",
   });
   const [loading, setLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -243,6 +247,45 @@ function RunPipelineForm() {
             <div>
               <label className="text-sm font-medium block mb-1">ID de voz (opcional)</label>
               <input type="text" value={form.voice_id} onChange={update("voice_id")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: rachel" />
+            </div>
+            <hr className="border-gray-100" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Efectos y transiciones</p>
+            <div>
+              <label className="text-sm font-medium block mb-1">Transición entre escenas</label>
+              <select value={form.transition_style} onChange={update("transition_style")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="crossfade">Crossfade — fundido suave</option>
+                <option value="flash">Flash — destello blanco</option>
+                <option value="zoom_punch">Zoom Punch — impacto cinético</option>
+                <option value="wipe_left">Wipe Left — deslizamiento</option>
+                <option value="glitch">Glitch — distorsión digital</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Intensidad de movimiento</label>
+              <select value={form.motion_intensity} onChange={update("motion_intensity")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="calm">Calm — suave, elegante</option>
+                <option value="medium">Medium — equilibrado</option>
+                <option value="energetic">Energetic — dinámico, impactante</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Animación de texto</label>
+              <select value={form.text_animation} onChange={update("text_animation")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="slide">Slide — entrada desde abajo</option>
+                <option value="scale">Scale — aparece ampliándose</option>
+                <option value="split">Split — palabras desde lados opuestos</option>
+                <option value="typewriter">Typewriter — aparece letra a letra</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Brief creativo del cliente (opcional)</label>
+              <textarea
+                value={form.creative_brief}
+                onChange={update("creative_brief")}
+                rows={3}
+                className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                placeholder="Ej: El cliente quiere efectos glitch en los titulares y un ritmo muy rápido tipo reels de moda..."
+              />
             </div>
           </>
         )}

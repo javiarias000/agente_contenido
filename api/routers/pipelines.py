@@ -40,6 +40,10 @@ class PipelineRunRequest(BaseModel):
     render_method: Literal["html", "image"] = "image"
     # HyperFrames
     visual_style: str = "swiss_pulse"
+    transition_style: Literal["crossfade", "flash", "zoom_punch", "wipe_left", "glitch"] = "crossfade"
+    motion_intensity: Literal["calm", "medium", "energetic"] = "medium"
+    text_animation: Literal["slide", "scale", "split", "typewriter"] = "slide"
+    creative_brief: str | None = None
 
 
 class FeedbackRequest(BaseModel):

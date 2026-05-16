@@ -127,9 +127,108 @@ Do NOT add any caption or subtitle elements. Captions are injected programmatica
 - Structural elements: hairline rules, dividers — they animate well with `scaleX: 0 → 1`
 - Never a single text block floating in space — add supporting elements (stat, badge, label, divider)
 
+## EFFECT REQUIREMENTS
+{EFFECT_BLOCK}
+
 ## OUTPUT
 Return ONLY the complete HTML document. First character must be `<`, last must be `>`.
 """
+
+# ── Structured effect instruction snippets ────────────────────────────────────
+_TRANSITION_INSTRUCTIONS: dict[str, str] = {
+    "crossfade": (
+        "TRANSITIONS: black crossfade overlay between every scene pair. "
+        "tl.to('#fade-N',{opacity:1,duration:0.3,ease:'power2.inOut'},sceneEnd-0.4); "
+        "tl.to('#fade-N',{opacity:0,duration:0.3,ease:'power2.inOut'},sceneEnd+0.1)."
+    ),
+    "flash": (
+        "TRANSITIONS: white flash. Overlay background must be #ffffff. "
+        "tl.to('#fade-N',{opacity:1,background:'#fff',duration:0.12,ease:'power4.out'},sceneEnd-0.15); "
+        "tl.to('#fade-N',{opacity:0,duration:0.22,ease:'power2.in'},sceneEnd+0.05). "
+        "Short and sharp — feels like a camera flash."
+    ),
+    "zoom_punch": (
+        "TRANSITIONS: zoom-punch cut. At sceneEnd-0.12 scale the outgoing clip's bg image to 1.15 "
+        "(tl.to('#sNbg',{scale:1.15,duration:0.12,ease:'power4.in'})), then cut instantly with opacity 0. "
+        "Incoming clip bg image starts at scale 0.92 and snaps to 1.0 (tl.from('#sN1bg',{scale:0.92,duration:0.35,ease:'power3.out'})). "
+        "No black overlay — hard cut with scale contrast."
+    ),
+    "wipe_left": (
+        "TRANSITIONS: horizontal wipe left-to-right using clip-path. "
+        "Add a wipe element: <div id='wipe-N' style='position:absolute;top:0;left:0;width:100%;height:100%;"
+        "background:var(--accent);clip-path:inset(0 100% 0 0);z-index:48'></div>. "
+        "tl.to('#wipe-N',{clipPath:'inset(0 0% 0 0)',duration:0.3,ease:'power3.inOut'},sceneEnd-0.2); "
+        "tl.to('#wipe-N',{clipPath:'inset(0 0% 0 100%)',duration:0.3,ease:'power3.inOut'},sceneEnd+0.15)."
+    ),
+    "glitch": (
+        "TRANSITIONS: digital glitch. At sceneEnd-0.1: "
+        "tl.to('#sN',{skewX:6,opacity:0.6,duration:0.04,ease:'none'}); "
+        "tl.to('#sN',{skewX:-4,opacity:0.3,duration:0.04,ease:'none'}); "
+        "tl.to('#sN',{skewX:0,opacity:0,duration:0.04,ease:'none'}). "
+        "Overlay uses accent color at 0.4 opacity for one frame. "
+        "Incoming clip: tl.from('#sN1',{skewX:-3,duration:0.08,ease:'power4.out'})."
+    ),
+}
+
+_MOTION_INSTRUCTIONS: dict[str, str] = {
+    "calm": (
+        "MOTION INTENSITY — CALM: Ken Burns scale max 1.04, all animation durations 0.8–1.4s. "
+        "Use only sine.inOut, power1.out, power2.out eases. "
+        "Text enters softly — never use elastic or back eases. Scene breathes slowly."
+    ),
+    "medium": (
+        "MOTION INTENSITY — MEDIUM: Ken Burns scale max 1.08, durations 0.5–0.9s. "
+        "Mix power3.out, expo.out, back.out(1.4). Standard social video energy."
+    ),
+    "energetic": (
+        "MOTION INTENSITY — ENERGETIC: Ken Burns scale 1.10–1.15, fast pan (translateX ±40px). "
+        "Durations 0.18–0.45s. Use elastic.out(1,0.4), back.out(2.2), power4.out exclusively. "
+        "Multi-word headlines MUST stagger word by word (stagger:0.05–0.08). "
+        "Add extra decorative elements that snap in with overshoot. High kinetic energy throughout."
+    ),
+}
+
+_TEXT_ANIM_INSTRUCTIONS: dict[str, str] = {
+    "slide": (
+        "TEXT ANIMATION — SLIDE: elements enter from y:60–80 offset with opacity fade. "
+        "Standard directional entrance, vary axis (some y, some x) for visual interest."
+    ),
+    "scale": (
+        "TEXT ANIMATION — SCALE: all text elements enter by scaling from 0.35–0.5 to 1.0 with opacity. "
+        "Use elastic.out or back.out for hero text, power3.out for supporting elements. "
+        "Logo-reveal feel — impactful and bold."
+    ),
+    "split": (
+        "TEXT ANIMATION — WORD SPLIT: break every headline into individual word spans and animate each "
+        "with tl.from() stagger (stagger:0.06–0.10, y:80, opacity:0). "
+        "Supporting text (sub, label) enters as a unit with slide. "
+        "Feels like a luxury editorial reveal."
+    ),
+    "typewriter": (
+        "TEXT ANIMATION — TYPEWRITER: reveal text left-to-right using clip-path. "
+        "Each text element: start with clip-path:inset(0 100% 0 0), animate to inset(0 0% 0 0) "
+        "over 0.7–1.0s linear or power1.in. Add a 1px accent-colored cursor bar "
+        "(::after or inline div) that moves with the reveal. Monospace/terminal aesthetic."
+    ),
+}
+
+
+def _build_effect_block(
+    transition_style: str,
+    motion_intensity: str,
+    text_animation: str,
+    creative_brief: str | None,
+) -> str:
+    lines = [
+        _TRANSITION_INSTRUCTIONS.get(transition_style, _TRANSITION_INSTRUCTIONS["crossfade"]),
+        _MOTION_INSTRUCTIONS.get(motion_intensity, _MOTION_INSTRUCTIONS["medium"]),
+        _TEXT_ANIM_INSTRUCTIONS.get(text_animation, _TEXT_ANIM_INSTRUCTIONS["slide"]),
+    ]
+    if creative_brief and creative_brief.strip():
+        lines.append(
+            f"CREATIVE BRIEF (client-requested, highest priority — apply exactly):\n{creative_brief.strip()}"
+        )
+    return "\n\n".join(lines)
 
 
 async def _get_audio_duration(path: str) -> float:
@@ -262,6 +361,10 @@ class HyperFramesComposer(BaseSkill):
         transcript_words: list[dict] = inputs.get("transcript_words", [])
         platform: str = inputs.get("platform", "tiktok")
         visual_style_key: str = inputs.get("visual_style", "swiss_pulse")
+        transition_style: str = inputs.get("transition_style", "crossfade")
+        motion_intensity: str = inputs.get("motion_intensity", "medium")
+        text_animation: str = inputs.get("text_animation", "slide")
+        creative_brief: str | None = inputs.get("creative_brief") or None
 
         await self.emit("step_start", "Generando composición HTML con HyperFrames...")
 
@@ -307,13 +410,19 @@ class HyperFramesComposer(BaseSkill):
             "scenes": timed_scenes,
         }
 
-        system = COMPOSER_SYSTEM.replace("{W}", str(width)).replace("{H}", str(height))
+        effect_block = _build_effect_block(transition_style, motion_intensity, text_animation, creative_brief)
+        system = (
+            COMPOSER_SYSTEM
+            .replace("{W}", str(width))
+            .replace("{H}", str(height))
+            .replace("{EFFECT_BLOCK}", effect_block)
+        )
         user_msg = (
             "Generate the complete HyperFrames HTML composition for this video.\n\n"
             + json.dumps(user_data, ensure_ascii=False, indent=2)
         )
 
-        await self.emit("progress", "Llamando a gpt-4.1-mini para generar HTML...")
+        await self.emit("progress", f"Llamando a gpt-4.1-mini — transición:{transition_style} movimiento:{motion_intensity} texto:{text_animation}...")
 
         resp = await self.client.chat.completions.create(
             model="gpt-4.1-mini",
