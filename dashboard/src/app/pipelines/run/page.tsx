@@ -203,6 +203,36 @@ function RunPipelineForm() {
                 <input type="url" value={form.news_url} onChange={update("news_url")} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ej: https://example.com/news" />
               </div>
             )}
+            <hr className="border-gray-100" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Efectos y movimiento</p>
+            <div>
+              <label className="text-sm font-medium block mb-1">Transición entre escenas</label>
+              <select value={form.transition_style} onChange={update("transition_style")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="crossfade">Crossfade — fundido negro</option>
+                <option value="flash">Flash — destello blanco</option>
+                <option value="zoom_punch">Zoom Punch — impacto cinético</option>
+                <option value="wipe_left">Wipe Left — deslizamiento</option>
+                <option value="glitch">Glitch — distorsión digital</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Intensidad de movimiento (Ken Burns)</label>
+              <select value={form.motion_intensity} onChange={update("motion_intensity")} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="calm">Calm — suave, elegante (3%)</option>
+                <option value="medium">Medium — equilibrado (8%)</option>
+                <option value="energetic">Energetic — dinámico, fuerte (16%)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Brief creativo del cliente (opcional)</label>
+              <textarea
+                value={form.creative_brief}
+                onChange={update("creative_brief")}
+                rows={2}
+                className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                placeholder="Ej: Quiero mucho movimiento, estilo Instagram fitness, colores vibrantes..."
+              />
+            </div>
           </>
         )}
 

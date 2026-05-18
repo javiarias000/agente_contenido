@@ -19,9 +19,34 @@ OUTPUT_FPS = 30
 SAFE_AREA_PERCENT = 0.05  # 5% safe area on edges
 
 # FFmpeg codec settings
-VIDEO_CODEC = "libx264"  # libx264 for compatibility, can switch to libx265 for better quality
-VIDEO_PRESET = "superfast"  # ultrafast|superfast|veryfast|faster|fast|medium|slow|slower|veryslow
-VIDEO_CRF = "28"  # 0=lossless, 23=default, 51=worst quality. Lower = better but larger file
+VIDEO_CODEC = "libx264"
+VIDEO_PRESET = "superfast"
+VIDEO_CRF = "28"
+
+# How much of the frame to crop (creates the Ken Burns "room to move")
+_MOTION_CROP: dict[str, float] = {
+    "calm": 0.03,
+    "medium": 0.08,
+    "energetic": 0.16,
+}
+
+# Fade duration in seconds for each transition style
+_FADE_DURATION: dict[str, float] = {
+    "crossfade": 0.35,
+    "flash": 0.22,
+    "zoom_punch": 0.28,
+    "wipe_left": 0.35,
+    "glitch": 0.18,
+}
+
+# Whether the fade is to white (True) or black (False)
+_FADE_WHITE: dict[str, bool] = {
+    "crossfade": False,
+    "flash": True,
+    "zoom_punch": False,
+    "wipe_left": False,
+    "glitch": False,
+}
 
 
 def _get_audio_duration(path: str) -> float:
@@ -80,6 +105,8 @@ class ComposedVideoAssembler(BaseSkill):
         motion_metadata = inputs.get("motion_metadata", [])
         srt_path = inputs.get("srt_path", "")
         script = inputs.get("script", {})
+        motion_intensity: str = inputs.get("motion_intensity", "medium")
+        transition_style: str = inputs.get("transition_style", "crossfade")
 
         # Either images or videos must be provided
         has_images = bool(image_paths)
@@ -101,14 +128,12 @@ class ComposedVideoAssembler(BaseSkill):
             await self.emit("progress", "Construyendo clips de escena...")
 
             if has_videos:
-                # Use pre-generated videos (e.g., from Kling)
-                scene_clips = await self._sync_videos_with_audio(
-                    video_paths, audio_paths
-                )
+                scene_clips = await self._sync_videos_with_audio(video_paths, audio_paths)
             else:
-                # Generate clips from images with animation
                 scene_clips = await self._build_animated_clips(
-                    image_paths, audio_paths, motion_metadata
+                    image_paths, audio_paths, motion_metadata,
+                    motion_intensity=motion_intensity,
+                    transition_style=transition_style,
                 )
 
             # Concatenate clips
@@ -166,98 +191,96 @@ class ComposedVideoAssembler(BaseSkill):
         image_paths: list[str],
         audio_paths: list[str],
         motion_metadata: list[dict] | None = None,
+        motion_intensity: str = "medium",
+        transition_style: str = "crossfade",
     ) -> list[str]:
-        """Build individual scene clips with animation filters.
-
-        Uses motion_metadata to apply ken-burns effect if available.
-        """
+        """Build individual scene clips with Ken Burns animation and transition fades."""
         clips = []
+        fade_dur = _FADE_DURATION.get(transition_style, 0.35)
+        fade_white = _FADE_WHITE.get(transition_style, False)
+        white_flag = ":white=1" if fade_white else ""
 
         for i, (img_path, audio_path) in enumerate(zip(image_paths, audio_paths)):
             if not img_path or not os.path.exists(img_path):
                 continue
 
             if not audio_path or not os.path.exists(audio_path):
-                await self.emit("progress", f"⚠️ Scene {i+1}: No audio found, using 3s default")
+                await self.emit("progress", f"Scene {i+1}: sin audio, usando 3s")
                 duration = 3.0
             else:
                 duration = _get_audio_duration(audio_path)
 
-            # Get motion info if available
-            motion = None
-            if motion_metadata and i < len(motion_metadata):
-                motion = motion_metadata[i]
-
+            motion = motion_metadata[i] if motion_metadata and i < len(motion_metadata) else None
             out_path = img_path.replace(".png", f"_scene_{i}.mp4")
 
-            # Build ffmpeg filter graph
-            filter_graph = self._build_filter_graph(motion, duration)
+            base_vf = self._build_filter_graph(motion, duration, motion_intensity)
+
+            # Fade in at start + fade out at end (per clip) for smooth transitions
+            fade_in_frames = max(1, int(fade_dur * OUTPUT_FPS))
+            fade_out_start = max(0.0, duration - fade_dur)
+            fade_vf = (
+                f"fade=in:st=0:d={fade_dur}{white_flag},"
+                f"fade=out:st={fade_out_start:.3f}:d={fade_dur}{white_flag}"
+            )
+            full_vf = f"{base_vf},{fade_vf}" if base_vf else fade_vf
 
             cmd = [
                 "ffmpeg", "-y",
                 "-loop", "1", "-i", img_path,
                 "-i", audio_path,
                 "-t", str(duration),
-                "-vf", filter_graph,
+                "-vf", full_vf,
                 "-r", str(OUTPUT_FPS),
                 "-pix_fmt", "yuv420p",
                 "-c:v", VIDEO_CODEC, "-preset", VIDEO_PRESET, "-crf", VIDEO_CRF,
                 "-c:a", "aac", "-shortest",
-                out_path
+                out_path,
             ]
 
             result = subprocess.run(cmd, capture_output=True, timeout=300)
             if result.returncode == 0 and os.path.exists(out_path):
                 clips.append(out_path)
-                await self.emit("progress", f"Clip {i+1} generado")
+                await self.emit("progress", f"Clip {i+1} generado [{motion_intensity}/{transition_style}]")
 
         return clips
 
-    def _build_filter_graph(self, motion: dict | None, duration: float) -> str:
-        """Build ffmpeg filter graph with animation.
-
-        Handles scaling to 1080x1920 and optional motion animation.
-        """
-        # Base scale/pad to fill 1080x1920
+    def _build_filter_graph(
+        self, motion: dict | None, duration: float, motion_intensity: str = "medium"
+    ) -> str:
+        """Scale to 1080×1920 and add Ken Burns motion if requested."""
         scale_pad = (
             f"scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease,"
             f"pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
         )
-
-        # Add motion animation if specified
-        if motion and motion.get("motion_type") != "static":
-            motion_type = motion.get("motion_type")
-            motion_filter = self._motion_filter(motion_type, duration)
-            return f"{scale_pad},{motion_filter}"
-
+        if motion and motion.get("motion_type") not in (None, "static"):
+            motion_filter = self._motion_filter(motion["motion_type"], duration, motion_intensity)
+            return f"{scale_pad},{motion_filter}" if motion_filter else scale_pad
         return scale_pad
 
-    def _motion_filter(self, motion_type: str, duration: float) -> str:
-        """Generate motion filter string for ffmpeg.
+    def _motion_filter(self, motion_type: str, duration: float, intensity: str = "medium") -> str:
+        """Ken Burns crop/scale based on motion type and intensity."""
+        crop_pct = _MOTION_CROP.get(intensity, 0.08)
+        crop_w = int(OUTPUT_WIDTH * (1 - crop_pct))
+        crop_h = int(OUTPUT_HEIGHT * (1 - crop_pct))
+        h_offset = int(OUTPUT_WIDTH * crop_pct)
+        v_offset = int(OUTPUT_HEIGHT * crop_pct)
+        rescale = f"scale={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}"
 
-        Optimized to avoid double-scaling. Motion is achieved through crop/pad
-        rather than additional scaling operations.
-        """
         if motion_type == "zoom_in":
-            # Simulate zoom in by cropping center (image already padded)
-            crop_w = int(OUTPUT_WIDTH * 0.95)
-            crop_h = int(OUTPUT_HEIGHT * 0.95)
-            return f"crop={crop_w}:{crop_h}:(iw-{crop_w})/2:(ih-{crop_h})/2,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
+            return f"crop={crop_w}:{crop_h}:(iw-{crop_w})/2:(ih-{crop_h})/2,{rescale}"
         elif motion_type == "zoom_out":
-            # Already achieved by padding in scale_pad
-            return ""
+            return f"crop={crop_w}:{crop_h}:(iw-{crop_w})/2:(ih-{crop_h})/2,{rescale}"
         elif motion_type == "pan_left":
-            # Crop right side and pad left
-            crop_w = int(OUTPUT_WIDTH * 0.95)
-            offset = int(OUTPUT_WIDTH * 0.05)
-            return f"crop={crop_w}:{OUTPUT_HEIGHT}:{offset}:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{offset}:0"
+            return f"crop={crop_w}:{OUTPUT_HEIGHT}:{h_offset}:0,{rescale}"
         elif motion_type == "pan_right":
-            # Crop left side and pad right
-            crop_w = int(OUTPUT_WIDTH * 0.95)
-            offset = int(OUTPUT_WIDTH * 0.05)
-            return f"crop={crop_w}:{OUTPUT_HEIGHT}:0:0,pad={OUTPUT_WIDTH}:{OUTPUT_HEIGHT}:{offset}:0"
-        else:
-            return ""
+            return f"crop={crop_w}:{OUTPUT_HEIGHT}:0:0,{rescale}"
+        elif motion_type == "pan_up":
+            return f"crop={OUTPUT_WIDTH}:{crop_h}:0:{v_offset},{rescale}"
+        elif motion_type == "pan_down":
+            return f"crop={OUTPUT_WIDTH}:{crop_h}:0:0,{rescale}"
+        elif motion_type == "diagonal":
+            return f"crop={crop_w}:{crop_h}:{h_offset // 2}:{v_offset // 2},{rescale}"
+        return ""
 
     def _concatenate_clips(self, clip_paths: list[str], output_path: str) -> None:
         """Concatenate video clips using ffmpeg concat demuxer."""

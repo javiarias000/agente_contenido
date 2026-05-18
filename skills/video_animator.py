@@ -26,19 +26,28 @@ class VideoAnimator(BaseSkill):
     def __init__(self, event_bus: EventBus, run_id: str, step_index: int = 0):
         super().__init__(event_bus, run_id, step_index)
 
+    # Maps motion_intensity → crop factor (same scale as composed_video_assembler)
+    _CROP: dict[str, float] = {"calm": 0.03, "medium": 0.08, "energetic": 0.16}
+
     async def run(self, inputs: dict[str, Any], interactive: bool = False) -> SkillResult:
         final_video_path: str = inputs.get("final_video_path", "")
         image_paths: list[str] = inputs.get("image_paths", [])
+        motion_intensity: str = inputs.get("motion_intensity", "medium")
 
         if not final_video_path or not os.path.exists(final_video_path):
             await self.emit("log", "Sin video final para animar")
             return SkillResult(status="skipped")
 
+        # With calm intensity there's nothing to animate — skip to avoid unnecessary processing
+        if motion_intensity == "calm":
+            await self.emit("log", "motion_intensity=calm → animación omitida")
+            return SkillResult(status="skipped", outputs={"final_video_path": final_video_path})
+
         if not settings.google_veo_api_key:
             await self.emit("log", "GOOGLE_VEO_API_KEY no configurada")
             return SkillResult(status="skipped")
 
-        await self.emit("step_start", "Animando video con Gemini + ffmpeg...")
+        await self.emit("step_start", f"Animando video con Gemini + ffmpeg [{motion_intensity}]...")
 
         try:
             reference_image = next(
@@ -63,7 +72,7 @@ class VideoAnimator(BaseSkill):
 
             await self.emit("progress", "3/3 Aplicando movimiento con ffmpeg...")
             success = await self._apply_motion_with_ffmpeg(
-                final_video_path, output_path, motion_type
+                final_video_path, output_path, motion_type, motion_intensity
             )
 
             if success and os.path.exists(output_path):
@@ -153,19 +162,22 @@ Elige la que sea MÁS apropiada para esta imagen."""
             return None
 
     async def _apply_motion_with_ffmpeg(
-        self, input_video: str, output_video: str, motion_type: str
+        self, input_video: str, output_video: str, motion_type: str, intensity: str = "medium"
     ) -> bool:
         """Aplica efecto de movimiento al video usando ffmpeg."""
         try:
-            # Define los filtros de ffmpeg según el tipo de movimiento
+            crop = self._CROP.get(intensity, 0.08)
+            scale_up = 1.0 + crop
+            crop_inv = 1.0 - crop
+
             ffmpeg_filters = {
-                "zoom_in": "scale=iw*1.2:ih*1.2,crop=iw:ih",
-                "zoom_out": "scale=iw*0.8:ih*0.8,pad=iw:ih:(ow-iw)/2:(oh-ih)/2:black",
-                "pan_left": "crop=iw*0.9:ih:0:0",
-                "pan_right": "crop=iw*0.9:ih:iw*0.1:0",
-                "pan_up": "crop=iw:ih*0.9:0:0",
-                "pan_down": "crop=iw:ih*0.9:0:ih*0.1",
-                "diagonal": "scale=iw*1.1:ih*1.1,crop=iw:ih"
+                "zoom_in": f"scale=iw*{scale_up:.3f}:ih*{scale_up:.3f},crop=iw/{scale_up:.3f}:ih/{scale_up:.3f}",
+                "zoom_out": f"scale=iw*{crop_inv:.3f}:ih*{crop_inv:.3f},pad=iw/{crop_inv:.3f}:ih/{crop_inv:.3f}:(ow-iw)/2:(oh-ih)/2:black",
+                "pan_left": f"crop=iw*{crop_inv:.3f}:ih:0:0,scale=iw/{crop_inv:.3f}:ih",
+                "pan_right": f"crop=iw*{crop_inv:.3f}:ih:iw*{crop:.3f}:0,scale=iw/{crop_inv:.3f}:ih",
+                "pan_up": f"crop=iw:ih*{crop_inv:.3f}:0:0,scale=iw:ih/{crop_inv:.3f}",
+                "pan_down": f"crop=iw:ih*{crop_inv:.3f}:0:ih*{crop:.3f},scale=iw:ih/{crop_inv:.3f}",
+                "diagonal": f"scale=iw*{scale_up:.3f}:ih*{scale_up:.3f},crop=iw/{scale_up:.3f}:ih/{scale_up:.3f}",
             }
 
             filter_str = ffmpeg_filters.get(motion_type, ffmpeg_filters["zoom_in"])
