@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import {
   Building2, CheckCircle2, Activity, Zap, Search,
-  Wand2, Film, Sparkles, ArrowRight,
+  Wand2, Film, Sparkles, ArrowRight, GalleryHorizontalEnd,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -84,10 +84,26 @@ export default function Home() {
       </div>
 
       {/* ── Quick actions ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
+        {/* Gallery */}
+        <Link href="/gallery"
+          className="bg-gradient-to-br from-orange-500 to-orange-700 text-white rounded-xl p-5 block hover:shadow-xl hover:-translate-y-0.5 transition-all space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+              <GalleryHorizontalEnd className="h-4 w-4 text-white" />
+            </div>
+            <ArrowRight className="h-4 w-4 text-white/60" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base">Galería</h3>
+            <p className="text-orange-200 text-xs mt-1">12 ejemplos listos · Un clic para generar</p>
+          </div>
+        </Link>
+
         {/* Studio — featured */}
         <Link href="/studio"
-          className="col-span-1 bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-xl p-6 block hover:shadow-xl hover:-translate-y-0.5 transition-all space-y-3"
+          className="col-span-1 bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-xl p-5 block hover:shadow-xl hover:-translate-y-0.5 transition-all space-y-3"
         >
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">

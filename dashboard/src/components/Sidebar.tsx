@@ -2,13 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Clapperboard, LayoutDashboard, Briefcase, Zap, FolderOpen, Wand2 } from "lucide-react";
+import { Clapperboard, LayoutDashboard, Briefcase, Zap, FolderOpen, Wand2, GalleryHorizontalEnd } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/studio", label: "Video Studio", icon: Wand2, highlight: true },
-  { href: "/brands", label: "Marcas", icon: Briefcase },
+  { href: "/studio",  label: "Video Studio", icon: Wand2,                highlight: true },
+  { href: "/gallery", label: "Galería",      icon: GalleryHorizontalEnd, highlight: true },
+  { href: "/brands",  label: "Marcas",       icon: Briefcase },
   { href: "/pipelines", label: "Pipelines", icon: Zap },
   { href: "/outputs", label: "Outputs", icon: FolderOpen },
 ];
