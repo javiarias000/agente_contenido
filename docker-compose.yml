@@ -7,7 +7,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Carpetas compartidas con live reload en development
       - ./api:/app/api
       - ./skills:/app/skills
       - ./outputs:/app/outputs
@@ -18,36 +17,44 @@ services:
       - ./fix_audio_and_assemble.py:/app/fix_audio_and_assemble.py
     environment:
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=sqlite:///./agente_contenido.db
+      - DATABASE_URL=sqlite+aiosqlite:///./agente_contenido.db
+      - DASHBOARD_URL=http://localhost:3000
     command: >
       uvicorn api.main:app
       --host 0.0.0.0
       --port 8000
       --reload
-      --reload-dirs /app/api,/app/skills
+      --reload-dir /app/api
+      --reload-dir /app/skills
     restart: unless-stopped
     networks:
       - agente-network
 
-  # Opcional: descomentar si quieres levantar el dashboard también
-  # frontend:
-  #   image: node:18-alpine
-  #   container_name: agente-contenido-frontend
-  #   working_dir: /app/dashboard
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./dashboard:/app/dashboard
-  #     - ./.env:/app/.env
-  #   environment:
-  #     - NEXT_PUBLIC_API_URL=http://localhost:8000
-  #   command: sh -c "npm install && npm run dev"
-  #   depends_on:
-  #     - backend
-  #   restart: unless-stopped
-  #   networks:
-  #     - agente-network
+  frontend:
+    image: node:22-alpine
+    container_name: agente-contenido-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./dashboard:/app
+      - frontend_modules:/app/node_modules
+      - frontend_next:/app/.next
+    environment:
+      - FASTAPI_URL=http://backend:8000
+      - NEXT_PUBLIC_API_BASE=/api-proxy
+      - NODE_ENV=development
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - agente-network
 
 networks:
   agente-network:
     driver: bridge
+
+volumes:
+  frontend_modules:
+  frontend_next:

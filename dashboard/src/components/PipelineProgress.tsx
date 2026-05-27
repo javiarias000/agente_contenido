@@ -16,14 +16,25 @@ interface StepState {
 }
 
 const STEP_LABELS: Record<string, string> = {
-  brand_load: "Cargar Marca",
-  script_generate: "Generar Guión",
-  image_generate: "Generar Imágenes",
-  voice_generate: "Generar Voz",
-  video_assemble: "Ensamblar Video",
-  subtitle_burn: "Subtítulos",
-  generate_ads: "Generar Anuncios",
-  lip_sync: "Lip-sync",
+  // Common
+  brand_load:           "Cargar Marca",
+  script_generate:      "Generar Guión",
+  voice_generate:       "Generar Voz",
+  // UGC / photo
+  image_generate:       "Generar Imágenes",
+  image_enhance:        "Mejorar Imágenes",
+  photo_analyze:        "Analizar Foto",
+  video_generate:       "Generar Video (Kling)",
+  subtitle_generate:    "Generar Subtítulos",
+  video_assemble:       "Ensamblar Video",
+  subtitle_burn:        "Quemar Subtítulos",
+  // HyperFrames
+  whisper_transcribe:   "Transcribir Audio",
+  hyperframes_compose:  "Componer Animación",
+  hyperframes_render:   "Renderizar Video",
+  // Other pipelines
+  generate_ads:         "Generar Anuncios",
+  lip_sync:             "Sincronizar Labios",
 };
 
 export default function PipelineProgress({ events, status }: PipelineProgressProps) {
