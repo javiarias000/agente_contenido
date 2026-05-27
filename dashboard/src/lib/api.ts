@@ -60,4 +60,26 @@ export const api = {
       body: JSON.stringify(data),
     }),
   getScript: (runId: string) => fetchJSON<any>(`/api/scripts/${runId}`),
+
+  // Studio — AI Chat
+  chatMessage: (messages: Array<{ role: string; content: string }>, context?: Record<string, any>) =>
+    fetchJSON<{ message: string; config_update?: Record<string, any> | null }>("/api/chat/message", {
+      method: "POST",
+      body: JSON.stringify({ messages, context }),
+    }),
+
+  // Studio — Media upload (images + videos)
+  uploadMedia: async (file: File): Promise<{ path: string; url: string; filename: string; media_type: "image" | "video"; mime_type: string; size_bytes: number }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${BASE}/api/uploads/media`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Upload ${res.status}: ${text}`);
+    }
+    return res.json();
+  },
 };

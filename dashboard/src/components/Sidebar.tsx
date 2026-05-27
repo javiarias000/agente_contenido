@@ -2,11 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Clapperboard, LayoutDashboard, Briefcase, Zap, FolderOpen } from "lucide-react";
+import { Clapperboard, LayoutDashboard, Briefcase, Zap, FolderOpen, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/studio", label: "Video Studio", icon: Wand2, highlight: true },
   { href: "/brands", label: "Marcas", icon: Briefcase },
   { href: "/pipelines", label: "Pipelines", icon: Zap },
   { href: "/outputs", label: "Outputs", icon: FolderOpen },
@@ -26,7 +27,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
-        {nav.map(({ href, label, icon: Icon }) => {
+        {nav.map(({ href, label, icon: Icon, highlight }) => {
           const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
             <Link
@@ -36,6 +37,8 @@ export default function Sidebar() {
                 "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                 isActive
                   ? "bg-blue-50 text-blue-700"
+                  : highlight
+                  ? "text-violet-700 bg-violet-50 hover:bg-violet-100"
                   : "text-slate-600 hover:bg-gray-100 hover:text-slate-900"
               )}
             >

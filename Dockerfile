@@ -5,6 +5,7 @@ WORKDIR /app
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    fonts-liberation \
     git \
     && rm -rf /var/lib/apt/lists/*
 
